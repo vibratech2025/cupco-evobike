@@ -495,17 +495,24 @@ function sonidoMuerte(){                     // el "perdiste" de consola
   g.gain.setValueAtTime(.13,t); g.gain.exponentialRampToValueAtTime(.0005,t+.45);
   o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+.47);
 }
-function sonidoVida(){                       // "vida extra" tipo consola
+function sonidoVida(){                       // "VIDA EXTRA": arpegio saltarin ascendente
   if(!AC||silencio) return;
   const t0=AC.currentTime;
-  [[88,0],[91,.07],[100,.14],[96,.21],[98,.28],[103,.36]].forEach(([m,dt])=>{
+  // E6 G6 E7 C7 D7 G7  -> el clasico "te ganaste una vida"
+  [[88,0,.085],[91,.085,.085],[100,.17,.11],[96,.28,.09],[98,.37,.09],[103,.46,.30]].forEach(([m,dt,d])=>{
     const o=AC.createOscillator(), g=AC.createGain(), t=t0+dt;
     o.type="square"; o.frequency.value=440*Math.pow(2,(m-69)/12);
     g.gain.setValueAtTime(0,t);
-    g.gain.linearRampToValueAtTime(.13,t+.008);
-    g.gain.exponentialRampToValueAtTime(.0005,t+.09);
-    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+.11);
+    g.gain.linearRampToValueAtTime(.16,t+.006);
+    g.gain.setValueAtTime(.16,t+d*0.55);
+    g.gain.exponentialRampToValueAtTime(.0004,t+d);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+d+.02);
   });
+  // refuerzo una octava abajo en la ultima nota
+  const o=AC.createOscillator(), g=AC.createGain(), t=t0+.46;
+  o.type="square"; o.frequency.value=440*Math.pow(2,(91-69)/12);
+  g.gain.setValueAtTime(.07,t); g.gain.exponentialRampToValueAtTime(.0004,t+.32);
+  o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+.34);
 }
 function sonidoPowerUp(){                    // arpegio ascendente
   if(!AC||silencio) return;
@@ -589,7 +596,7 @@ function presentar(b, cb){
   const uiEl=document.getElementById("ui"), gar=document.getElementById("garage");
   uiEl.style.opacity="0"; gar.style.opacity="0";
   el.classList.add("on");
-  sonidoVida();
+  sonidoMoneda();
   setTimeout(()=>{
     el.classList.remove("on");
     uiEl.style.opacity="1"; gar.style.opacity="1";
@@ -1119,7 +1126,7 @@ function acierto(n,qi,conAyuda){
   save(s);
 
   destello("ok"); temblar(); boostT=64; velObjetivo=140; gateT=0;
-  sonidoAplausos();
+  sonidoVida();
   PAC.activo=340; PAC.x=-0.35; PAC.invertido=340;   // ahora el pacman los persigue a ellos
 
   setTimeout(()=>{ beep([880,1320],.16,"triangle",.10); }, 340);
