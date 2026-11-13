@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0420">
+<title>EVOBIKE · SUBÍ DE NIVEL</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:#0a0420}
+  body{font-family:"Arial Black",system-ui,-apple-system,sans-serif;color:#fff;user-select:none}
+  #stage{position:fixed;inset:0;overflow:hidden}
+  #cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  /* ---------- HUD ---------- */
+  #hud{position:absolute;top:0;left:0;right:0;padding:12px 16px 0;display:flex;align-items:center;
+       justify-content:space-between;gap:10px;z-index:5}
+  .logo{font-size:19px;letter-spacing:-.5px;text-shadow:0 0 18px rgba(47,226,106,.8)}
+  .logo b{color:#2FE26A}
+  .cont{font-family:ui-monospace,monospace;font-size:15px;color:#7ee8ff;letter-spacing:1px;
+        background:rgba(126,232,255,.1);border:1px solid rgba(126,232,255,.28);padding:4px 11px;border-radius:20px}
+  .cont span{opacity:.55;font-size:12px}
+  #mute{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;
+        width:36px;height:36px;border-radius:12px;font-size:15px;cursor:pointer;backdrop-filter:blur(6px)}
+
+  /* ---------- GARAGE ---------- */
+  #garage{position:absolute;top:56px;left:0;right:0;display:flex;justify-content:center;gap:6px;
+          z-index:5;padding:0 10px}
+  .slot{width:44px;height:38px;border-radius:10px;background:rgba(255,255,255,.05);
+        border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;
+        overflow:hidden;transition:.35s;position:relative}
+  .slot img{width:40px;object-fit:contain;filter:grayscale(1) brightness(.45);opacity:.55;transition:.4s}
+  .slot.on{border-color:rgba(47,226,106,.8);background:rgba(47,226,106,.13);
+           box-shadow:0 0 16px rgba(47,226,106,.5)}
+  .slot.on img{filter:none;opacity:1;transform:scale(1.06)}
+  .slot.nueva{animation:slotpop .7s cubic-bezier(.2,.9,.2,1.6)}
+  @keyframes slotpop{0%{transform:scale(.4) rotate(-14deg);filter:brightness(3)}
+                     60%{transform:scale(1.22) rotate(4deg)}100%{transform:scale(1)}}
+
+  /* ---------- BANNER NUEVA MOTO ---------- */
+  #banner{position:absolute;top:34%;left:50%;transform:translate(-50%,-30px);z-index:8;
+          padding:11px 20px;border-radius:16px;white-space:nowrap;opacity:0;pointer-events:none;
+          background:linear-gradient(100deg,rgba(47,226,106,.96),rgba(126,232,255,.96));
+          color:#04120a;font-size:14px;letter-spacing:.06em;
+          box-shadow:0 12px 44px rgba(47,226,106,.55)}
+  #banner.on{animation:banner 2.1s cubic-bezier(.2,.9,.2,1) forwards}
+  @keyframes banner{0%{opacity:0;transform:translate(-50%,-30px) scale(.8)}
+                    14%{opacity:1;transform:translate(-50%,0) scale(1.04)}
+                    22%{transform:translate(-50%,0) scale(1)}
+                    82%{opacity:1;transform:translate(-50%,0) scale(1)}
+                    100%{opacity:0;transform:translate(-50%,-14px) scale(.96)}}
+
+  .speedo{position:absolute;left:18px;top:112px;z-index:5;font-family:ui-monospace,Menlo,monospace}
+  .speedo .n{font-size:32px;line-height:1;letter-spacing:-2px;color:#fff;text-shadow:0 0 20px rgba(0,229,255,.85)}
+  .speedo .u{font-size:10px;letter-spacing:.22em;color:#7ee8ff;opacity:.85}
+
+  /* ---------- PANEL ---------- */
+  #ui{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;z-index:4;pointer-events:none}
+  #panel{pointer-events:auto;padding:0 14px calc(16px + env(safe-area-inset-bottom));max-width:640px;width:100%;margin:0 auto}
+  .card{background:rgba(8,4,24,.85);border:1px solid rgba(126,232,255,.26);border-radius:22px;padding:18px;
+        -webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%);
+        box-shadow:0 0 0 1px rgba(47,226,106,.12),0 18px 60px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.07);
+        animation:sube .34s cubic-bezier(.2,.9,.25,1.2) both}
+  @keyframes sube{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+  .kicker{font-size:10.5px;letter-spacing:.26em;color:#7ee8ff;text-transform:uppercase;margin-bottom:7px}
+  .kicker b{color:#2FE26A}
+  h1{font-size:clamp(24px,7vw,38px);line-height:.98;letter-spacing:-1.4px;margin:2px 0 10px}
+  h1 em{font-style:normal;background:linear-gradient(100deg,#2FE26A,#7ee8ff 55%,#ff5fbe);
+        -webkit-background-clip:text;background-clip:text;color:transparent;
+        filter:drop-shadow(0 0 14px rgba(47,226,106,.55))}
+  p{font-family:system-ui,-apple-system,sans-serif;font-weight:500;font-size:15px;line-height:1.48;color:#cfd8e6}
+  .q{font-size:clamp(16px,4.4vw,20px);line-height:1.26;letter-spacing:-.3px;margin:4px 0 2px}
+
+  .ops{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+  .op{display:flex;align-items:center;gap:12px;width:100%;padding:14px 15px;border-radius:15px;
+      background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.14);color:#fff;
+      font-size:15.5px;text-align:left;font-family:system-ui,sans-serif;font-weight:600;cursor:pointer;
+      transition:transform .12s,background .2s,border-color .2s}
+  .op b{flex:0 0 26px;height:26px;border-radius:9px;background:rgba(126,232,255,.16);color:#7ee8ff;
+        display:flex;align-items:center;justify-content:center;font-size:12.5px;font-family:"Arial Black",sans-serif}
+  .op:active{transform:scale(.985)}
+  .op.bien{background:linear-gradient(180deg,#5cff95,#2FE26A);border-color:#2FE26A;color:#04120a;
+           animation:pop .4s cubic-bezier(.2,.9,.2,1.5)}
+  .op.bien b{background:rgba(0,0,0,.18);color:#04120a}
+  .op.mal{background:rgba(239,61,92,.18);border-color:rgba(239,61,92,.6);color:#ff9aab;
+          text-decoration:line-through;animation:no .38s}
+  .op.mal b{background:rgba(239,61,92,.3);color:#ff9aab}
+  .op:disabled{opacity:.5;cursor:default}
+  @keyframes pop{0%{transform:scale(.94)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+  @keyframes no{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+  .btns{display:flex;gap:10px;margin-top:14px}
+  button{font-family:"Arial Black",system-ui,sans-serif;font-weight:900;border:0;cursor:pointer;
+         border-radius:16px;transition:transform .12s}
+  button:active{transform:scale(.96)}
+  .big{width:100%;padding:18px;font-size:16.5px;color:#04120a;
+       background:linear-gradient(180deg,#5cff95,#2FE26A 60%,#12c452);
+       box-shadow:0 7px 0 #0d7a35,0 0 40px rgba(47,226,106,.55)}
+  .ghost{width:100%;padding:14px;font-size:13.5px;color:#cfd8e6;background:rgba(255,255,255,.07);
+         border:1px solid rgba(255,255,255,.16)}
+
+  .ayuda{margin-top:12px;font-family:system-ui,sans-serif;font-weight:500;font-size:13.5px;line-height:1.42;
+         color:#ffe08a;background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.35);
+         border-left:4px solid #FFD166;border-radius:12px;padding:11px 13px;animation:sube .3s both}
+  .dato{margin-top:12px;font-family:system-ui,sans-serif;font-weight:500;font-size:13.5px;line-height:1.42;
+        color:#a8ffc8;background:rgba(47,226,106,.1);border:1px solid rgba(47,226,106,.32);
+        border-left:4px solid #2FE26A;border-radius:12px;padding:11px 13px}
+  .pista{margin-top:11px;font-family:system-ui,-apple-system,sans-serif;font-weight:500;font-size:11.5px;
+         line-height:1.45;color:#8fb0c4;background:rgba(126,232,255,.07);
+         border-left:2px solid rgba(126,232,255,.55);border-radius:8px;padding:7px 10px}
+  .mini{font-family:ui-monospace,monospace;font-size:12px;color:#7ee8ff;margin-top:8px;letter-spacing:.04em}
+
+  label{display:block;font-size:10.5px;letter-spacing:.2em;color:#8fa3bb;margin:12px 0 6px;text-transform:uppercase}
+  input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(126,232,255,.22);border-radius:14px;
+        padding:15px 14px;font-family:system-ui,sans-serif;font-weight:600;font-size:16px;color:#fff;outline:none}
+  input:focus{border-color:#2FE26A;box-shadow:0 0 0 3px rgba(47,226,106,.18)}
+  .chk{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-family:system-ui,sans-serif;
+       font-weight:500;font-size:12.5px;color:#93a3b8;line-height:1.4}
+  .chk input{width:21px;height:21px;flex:0 0 21px;margin-top:1px;accent-color:#2FE26A}
+  .err{font-family:system-ui,sans-serif;font-size:13px;color:#ff8a9b;margin-top:9px}
+
+  #flash{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:6}
+  #flash.ok{background:radial-gradient(circle at 50% 55%,rgba(47,226,106,.55),transparent 62%);animation:fl .45s}
+  #flash.bad{background:radial-gradient(circle at 50% 55%,rgba(239,61,92,.5),transparent 62%);animation:fl .4s}
+  @keyframes fl{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+
+  #grito{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:7;
+         pointer-events:none;opacity:0}
+  #grito.on{opacity:1;animation:grito .85s cubic-bezier(.2,.9,.2,1) forwards}
+  #grito span{font-size:clamp(34px,12vw,78px);letter-spacing:-2px;
+              background:linear-gradient(180deg,#fff,#2FE26A);-webkit-background-clip:text;background-clip:text;
+              color:transparent;text-shadow:0 0 60px rgba(47,226,106,.9)}
+  @keyframes grito{0%{transform:scale(.4) rotate(-6deg);opacity:0}
+                   22%{transform:scale(1.12) rotate(2deg);opacity:1}
+                   70%{transform:scale(1) rotate(0);opacity:1}100%{transform:scale(1.35);opacity:0}}
+
+  .shake{animation:sh .38s}
+  @keyframes sh{0%,100%{transform:translate(0,0)}20%{transform:translate(-7px,4px)}
+                40%{transform:translate(6px,-5px)}60%{transform:translate(-4px,-3px)}80%{transform:translate(3px,4px)}}
+
+  .ticket{position:relative;overflow:hidden}
+  .ticket:before{content:"";position:absolute;inset:-40% -10%;
+                 background:conic-gradient(from 0deg,transparent,rgba(47,226,106,.16),transparent 40%);
+                 animation:gira 5s linear infinite}
+  @keyframes gira{to{transform:rotate(360deg)}}
+  .cod{position:relative;font-size:clamp(32px,10.5vw,54px);letter-spacing:1px;text-align:center;
+       background:linear-gradient(180deg,#fff,#7ee8ff);-webkit-background-clip:text;background-clip:text;
+       color:transparent;filter:drop-shadow(0 0 22px rgba(126,232,255,.8));margin:5px 0 2px;
+       font-family:ui-monospace,Menlo,monospace}
+  .sub{position:relative;font-family:system-ui,sans-serif;font-weight:600;font-size:13.5px;color:#9fb0c6;text-align:center}
+  a.big{display:block;text-align:center;text-decoration:none}
+
+  /* ---------- PRESENTACION DE LA MOTO ---------- */
+  #presenta{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+            justify-content:center;gap:16px;padding:28px;opacity:0;pointer-events:none;
+            background:radial-gradient(circle at 50% 45%,rgba(22,7,52,.97),rgba(4,1,12,.99));
+            transition:opacity .3s}
+  #presenta.on{opacity:1}
+  .pr-k{font-family:system-ui,sans-serif;font-weight:800;font-size:12.5px;letter-spacing:.24em;
+        color:#7ee8ff;text-align:center}
+  #pr-img{width:min(80vw,540px);height:auto;filter:drop-shadow(0 0 42px rgba(255,255,255,.8))}
+  #presenta.on #pr-img{animation:prBici .85s cubic-bezier(.2,.9,.2,1.35) both}
+  @keyframes prBici{0%{transform:translateY(46px) scale(.68);opacity:0}
+                    60%{transform:translateY(-8px) scale(1.04);opacity:1}
+                    100%{transform:none;opacity:1}}
+  .pr-n{font-size:clamp(30px,9.5vw,56px);letter-spacing:-1.8px;line-height:1;
+        background:linear-gradient(180deg,#fff,#2FE26A 70%);
+        -webkit-background-clip:text;background-clip:text;color:transparent;
+        filter:drop-shadow(0 0 24px rgba(47,226,106,.7))}
+  .pr-s{font-family:system-ui,sans-serif;font-weight:600;font-size:13px;color:#9fb0c6;
+        letter-spacing:.06em;text-align:center}
+
+  /* ---------- LOGO BOOM ---------- */
+  #boom{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;
+        pointer-events:none;opacity:0}
+  #boom.on{animation:boomIn 1.25s cubic-bezier(.2,.9,.2,1) forwards}
+  #boom .blogo{position:relative;width:min(76vw,540px);height:auto;
+               filter:drop-shadow(0 0 46px rgba(47,226,106,.95)) drop-shadow(0 0 90px rgba(126,232,255,.5))}
+  #boom .burst{position:absolute;width:70vmax;height:70vmax;border-radius:50%;
+               background:radial-gradient(circle,rgba(47,226,106,.6),rgba(47,226,106,0) 62%)}
+  #boom.on .burst{animation:burst 1.1s ease-out forwards}
+  @keyframes boomIn{0%{opacity:0;transform:scale(.3) rotate(-7deg)}
+                    16%{opacity:1;transform:scale(1.2) rotate(2deg)}
+                    28%{transform:scale(1) rotate(0)}
+                    72%{opacity:1;transform:scale(1.05)}
+                    100%{opacity:0;transform:scale(1.55)}}
+  @keyframes burst{0%{transform:scale(.15);opacity:1}100%{transform:scale(1.7);opacity:0}}
+  .in-evento{display:flex;align-items:center;gap:10px;animation:sube .7s .8s both;opacity:.95}
+  .in-evento img{height:38px;width:auto}
+  .in-evento span{font-family:system-ui,sans-serif;font-weight:800;font-size:11px;letter-spacing:.22em;
+                  color:#b9c8d8;border:1px solid rgba(185,200,216,.35);border-radius:20px;padding:5px 12px}
+
+  /* ---------- INTRO ---------- */
+  #intro{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;
+         justify-content:center;gap:15px;padding:34px 24px;text-align:center;
+         background:radial-gradient(circle at 50% 38%,#1e0838 0%,#0a0420 55%,#05010f 100%);
+         transition:opacity .5s}
+  #intro.off{opacity:0;pointer-events:none}
+  .paso{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+        gap:16px;padding:34px 24px 90px;opacity:0;transform:scale(.96);transition:opacity .45s,transform .45s;
+        pointer-events:none}
+  .paso.on{opacity:1;transform:scale(1);pointer-events:auto}
+  .in-title{font-size:clamp(34px,11vw,62px);letter-spacing:-2px;
+            background:linear-gradient(100deg,#fff,#2FE26A 60%,#7ee8ff);
+            -webkit-background-clip:text;background-clip:text;color:transparent;
+            filter:drop-shadow(0 0 26px rgba(47,226,106,.75))}
+  .in-hint{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:.26em;color:#7ee8ff;
+           opacity:.85;animation:latido 1.8s infinite}
+  .in-pre{font-family:system-ui,sans-serif;font-weight:800;font-size:clamp(13px,4vw,18px);
+          letter-spacing:.24em;color:#cfe3f5}
+  .in-sol{font-size:clamp(44px,14vw,86px);letter-spacing:-2px;line-height:.95;
+          background:linear-gradient(180deg,#fff,#FFD400 55%,#ff8a00);
+          -webkit-background-clip:text;background-clip:text;color:transparent;
+          filter:drop-shadow(0 0 40px rgba(255,196,0,.8))}
+  #biciVuela{position:absolute;width:min(80vw,480px);height:auto;top:50%;left:0;
+             transform:translate(-130%,-50%);opacity:0;
+             filter:drop-shadow(0 0 22px rgba(255,255,255,.9))}
+  #biciVuela.vuela{animation:volar 2.6s cubic-bezier(.3,.1,.5,1) forwards}
+  @keyframes volar{
+    0%{transform:translate(-130%,-50%) rotate(-14deg) scale(.65);opacity:0}
+    12%{opacity:1}
+    55%{transform:translate(22%,-64%) rotate(6deg) scale(1)}
+    88%{opacity:1}
+    100%{transform:translate(150%,-46%) rotate(-4deg) scale(.8);opacity:0}
+  }
+  .in-log{animation:intrologo 1.05s cubic-bezier(.2,.9,.2,1.3) both}
+  .in-log img{width:min(70vw,330px);height:auto;filter:drop-shadow(0 0 36px rgba(47,226,106,.9))}
+  @keyframes intrologo{0%{transform:scale(.55);opacity:0;filter:blur(6px)}
+                       55%{transform:scale(1.07);opacity:1;filter:blur(0)}
+                       100%{transform:scale(1)}}
+  .in-t1{font-size:clamp(27px,8.4vw,46px);line-height:.96;letter-spacing:-1.6px;
+         animation:sube .7s .5s both}
+  .in-t1 em{font-style:normal;background:linear-gradient(100deg,#2FE26A,#7ee8ff 55%,#ff5fbe);
+            -webkit-background-clip:text;background-clip:text;color:transparent;
+            filter:drop-shadow(0 0 16px rgba(47,226,106,.6))}
+  .in-t2{font-family:system-ui,sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.2em;
+         color:#7ee8ff;text-transform:uppercase;animation:sube .7s .7s both}
+  .in-chip{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:.28em;color:#7ee8ff;
+           border:1px solid rgba(126,232,255,.45);border-radius:20px;padding:5px 14px;
+           background:rgba(126,232,255,.08);animation:sube .7s .35s both}
+  .in-suerte{font-family:"Arial Black",sans-serif;font-size:clamp(17px,5vw,24px);letter-spacing:-.5px;
+             color:#2FE26A;text-shadow:0 0 30px rgba(47,226,106,.85);transform:rotate(-2.5deg);
+             animation:sube .7s 1s both, latido 2.2s 1.7s infinite}
+  .in-promesa{font-size:clamp(16px,4.6vw,22px);line-height:1.15;letter-spacing:-.4px;color:#fff;
+              text-shadow:0 0 26px rgba(47,226,106,.55);animation:sube .7s .85s both}
+  .in-t3{font-family:system-ui,sans-serif;font-weight:500;font-size:15px;line-height:1.5;
+         color:#c8d4e2;max-width:430px;animation:sube .7s .9s both}
+  .in-btn{margin-top:8px;padding:18px 36px;font-size:17px;color:#04120a;border-radius:18px;
+          background:linear-gradient(180deg,#5cff95,#2FE26A 60%,#12c452);
+          box-shadow:0 8px 0 #0d7a35,0 0 50px rgba(47,226,106,.6);
+          animation:sube .7s 1.05s both, latido 2s 1.8s infinite}
+  @keyframes latido{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+  .in-pie{font-family:system-ui,sans-serif;font-size:9.5px;letter-spacing:.26em;color:#4a5a6a;
+          animation:sube .7s 1.2s both}
+
+  @media (min-width:820px){
+    #panel{max-width:720px;padding-bottom:30px}
+    .card{padding:26px 28px;border-radius:26px}
+    p{font-size:17.5px} .q{font-size:24px} .op{font-size:18px;padding:16px 18px}
+    .big{font-size:20px;padding:22px}
+    .speedo .n{font-size:48px} h1{font-size:44px}
+    .slot{width:60px;height:48px} .slot img{width:54px}
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv"></canvas>
+
+  <div id="hud">
+    <div class="logo" onclick="verIntro()" style="cursor:pointer">EVO<b>BIKE</b></div>
+    <div class="cont" id="cont">1<span>/7</span></div>
+    <button id="mute" title="sonido">🔊</button>
+  </div>
+
+  <div id="garage"></div>
+  <div id="banner">NUEVA MOTO</div>
+  <div class="speedo"><div class="n" id="kmh">0</div><div class="u">KM/H</div></div>
+
+  <div id="ui"><div id="panel"></div></div>
+  <div id="flash"></div>
+  <div id="grito"><span>¡BOOST!</span></div>
+  <div id="boom"><div class="burst"></div><img class="blogo" src="img/logo.png" alt="EVOBIKE"></div>
+
+  <div id="presenta">
+    <div class="pr-k">AHORA VAS A MANEJAR UNA</div>
+    <img id="pr-img" src="motos/vmp_s5.png" alt="">
+    <div class="pr-n" id="pr-n">—</div>
+    <div class="pr-s" id="pr-s"></div>
+  </div>
+
+  <div id="intro">
+    <div class="paso on" id="p1">
+      <div class="in-log"><img src="img/logo.png" alt="EVOBIKE"></div>
+      <div class="in-title">EVOBIKE</div>
+    </div>
+    <div class="paso" id="p2">
+      <div class="in-pre">PARTICIPÁ POR UNA</div>
+      <div class="in-sol">SOL PRO</div>
+      <img id="biciVuela" src="motos/sol_pro.png" alt="">
+    </div>
+    <div class="paso" id="p3">
+      <div class="in-promesa">GANÁ EL JUEGO Y<br>ASEGURA TU LUGAR</div>
+      <div class="in-suerte">¡MUCHA SUERTE!</div>
+      <button class="in-btn" onclick="empezarJuego()">EMPEZAR NIVEL 1</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   CONFIG
+   ===================================================================== */
+const CFG = { WA_EVOBIKE:"5493624000000", horaSorteo:"20:30", evento:"CupCo Fest" };
+const KEY = "evobike_cupco_v3";
+
+/* La línea completa. Se desbloquean en este orden: arrancás en la más
+   básica y terminás manejando la más potente. */
+const BIKES = [
+  {id:"vmp_s5",  n:"VMP S5",  spec:"350 W · 40 km/h · 35 km"},
+  {id:"vmp_s6",  n:"VMP S6",  spec:"350 W · 40 km/h · 35 km"},
+  {id:"sol_pro", n:"SOL PRO", spec:"500 W · 42 km/h · 65 km"},
+  {id:"moped",   n:"MOPED",   spec:"500 W · 40 km/h · 50-65 km"},
+  {id:"tauro",   n:"TAURO",   spec:"800 W · 45-49 km/h · 50-65 km"},
+  {id:"zeus",    n:"ZEUS",    spec:"800 W · 45-49 km/h · 65-75 km"},
+  {id:"urbex",   n:"URBEX",   spec:"850 W · 47 km/h · 45-50 km"}
+];
+
+/* 6 preguntas de opción múltiple, 2 por nivel. Cada acierto = una moto. */
+const NIVELES = {
+  1:{ nombre:"EL SPOT", donde:"el spot de las motos", preg:[
+      {q:"¿Cuánto sale hacer 100 km en una EVOBIKE?",
+       ops:["Lo mismo que llenar el tanque de una moto a nafta","Menos que un viaje en colectivo","Como tres viajes en colectivo","Más caro que la nafta"], ok:1,
+       ayuda:"Una carga completa son 0,96 kWh: menos que un viaje en colectivo. Un tanque, varias veces más.",
+       dato:"Con lo que llenás un tanque, cargás la eléctrica más de 30 veces."},
+      {q:"¿Qué gastos te sacás de encima con una eléctrica?",
+       ops:["Nafta, seguro, aceite, etc.","Solo la nafta","Ninguno, es igual","Solo el seguro"], ok:0,
+       ayuda:"No tiene motor a explosión: no hay aceite, no hay bujías, no hay escape.",
+       dato:"Nafta, aceite y service: gastos que desaparecen."}
+  ]},
+  2:{ nombre:"TEST DRIVE", donde:"el test drive", preg:[
+      {q:"¿Qué se escucha cuando pasa una EVOBIKE?",
+       ops:["El escape","Nada: es silenciosa","El motor a explosión","El cambio de marcha"], ok:1,
+       ayuda:"Prestá atención cuando pase una: no suena.",
+       dato:"Cero ruido. Ni de día ni a las 3 de la mañana."},
+      {q:"¿Cuánta plata te queda en el bolsillo por mes sin cargar nafta?",
+       ops:["Nada","Un poco","Bastante: es como no pagar el colectivo todos los días","No se ahorra"], ok:2,
+       ayuda:"Sumá lo que gastás de nafta en un mes y pensá qué harías con esa plata.",
+       dato:"Esa plata se queda en tu bolsillo todos los meses."}
+  ]},
+  3:{ nombre:"LA CARPA", donde:"la carpa del sorteo", preg:[
+      {q:"¿Dónde se carga una EVOBIKE?",
+       ops:["En una estación de servicio","En cualquier enchufe de tu casa","Solo en un local EVOBIKE","En el taller"], ok:1,
+       ayuda:"Igual que el celular: la enchufás donde haya un tomacorriente.",
+       dato:"En tu casa, en la oficina, donde haya un enchufe. Sin surtidor."},
+      {q:"¿Cuándo empezás a ahorrar con una eléctrica?",
+       ops:["Desde el primer día","Al año","A los cinco años","No se ahorra"], ok:0,
+       ayuda:"No cargás nafta nunca más: el ahorro arranca el día que la sacás.",
+       dato:"El ahorro empieza el primer día."}
+  ]}
+};
+const TOTAL_PREG = 6;
+
+/* =====================================================================
+   ESTADO
+   ===================================================================== */
+const S = () => { try { return JSON.parse(localStorage.getItem(KEY))||{} } catch(e){ return {} } };
+const save = o => localStorage.setItem(KEY, JSON.stringify(o));
+const biciDe = () => { const s=S(); const l = s.bikes||["vmp_s5"]; return BIKES.find(b=>b.id===l[l.length-1]) || BIKES[0]; };
+const nivelPend = () => { const s=S(); if(!s.n1) return 1; if(!s.n2) return 2; if(!s.n3) return 3; return 4; };
+const aciertos  = () => (S().bikes||["vmp_s5"]).length - 1;
+
+/* =====================================================================
+   AUDIO
+   ===================================================================== */
+let AC=null, silencio = localStorage.getItem(KEY+".mute")==="1";
+let musGain=null, musVoz=null, musIdx=0, musNext=0, musTimer=null, musiOn=false;
+
+function audioInit(){
+  if(AC) return;
+  try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return; }
+  musGain = AC.createGain();
+  musGain.gain.value = silencio ? 0 : 0.55;
+  musGain.connect(AC.destination);
+  aplicarMute();
+}
+
+/* ===== MUSIQUITA CHIPTUNE (melodía popular rusa, dominio público) =====
+   Dos voces de onda cuadrada, sin archivos: no pesa nada y anda en cualquier telefono. */
+const MEL = [
+  [76,4],[71,2],[72,2],[74,4],[72,2],[71,2],[69,4],[69,2],[72,2],
+  [76,4],[74,2],[72,2],[71,6],[72,2],[74,4],
+  [76,4],[72,4],[69,4],[69,4]
+];
+const PULSO = 0.115;
+const fnota = m => 440*Math.pow(2,(m-69)/12);
+
+function notaChiptune(midi, t0, dur, vol){
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.type="square"; o.frequency.value=fnota(midi);
+  g.gain.setValueAtTime(0,t0);
+  g.gain.linearRampToValueAtTime(vol,t0+0.010);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur*0.85);
+  o.connect(g); g.connect(musGain);
+  o.start(t0); o.stop(t0+dur);
+}
+function programarMusica(){
+  if(!AC || !musiOn) return;
+  const ahora = AC.currentTime;
+  while(musNext < ahora + 0.30){
+    const [m,u] = MEL[musIdx % MEL.length];
+    const dur = u*PULSO;
+    if(m >= 0){
+      notaChiptune(m,      musNext, dur*0.92, 0.055);   // melodia
+      notaChiptune(m-12,   musNext, dur*0.92, 0.030);   // una octava abajo
+    }
+    musNext += dur;
+    musIdx++;
+  }
+}
+function musicaOn(){
+  if(!AC || musiOn) return;
+  musiOn = true; musIdx = 0; musNext = AC.currentTime + 0.15;
+  if(musTimer) clearInterval(musTimer);
+  musTimer = setInterval(programarMusica, 140);
+}
+function musicaOff(){
+  musiOn = false;
+  if(musTimer){ clearInterval(musTimer); musTimer = null; }
+}
+function aplicarMute(){
+  if(!musGain || !AC) return;
+  musGain.gain.setTargetAtTime(silencio?0:0.55, AC.currentTime, .1);
+  if(silencio) musicaOff(); else musicaOn();
+}
+function beep(fr,dur=.16,type="triangle",vol=.15){
+  if(!AC||silencio) return;
+  fr.forEach((f,i)=>{ const o=AC.createOscillator(),g=AC.createGain(); o.type=type; o.frequency.value=f;
+    const t0=AC.currentTime+i*0.055;
+    g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(vol,t0+.012);
+    g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+    o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0+dur+.02); });
+}
+function buzz(){
+  if(!AC||silencio) return;
+  const o=AC.createOscillator(),g=AC.createGain(); o.type="square"; o.frequency.value=98;
+  const t0=AC.currentTime; g.gain.setValueAtTime(.11,t0);
+  g.gain.exponentialRampToValueAtTime(.0001,t0+.3);
+  o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0+.32);
+}
+function sonidoMoneda(){                     // blip tipo moneda
+  if(!AC||silencio) return;
+  const t0=AC.currentTime;
+  [[988,0,.06],[1319,.06,.16]].forEach(([f,dt,d])=>{
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.type="square"; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t0+dt);
+    g.gain.linearRampToValueAtTime(.14,t0+dt+.008);
+    g.gain.exponentialRampToValueAtTime(.0005,t0+dt+d);
+    o.connect(g); g.connect(AC.destination); o.start(t0+dt); o.stop(t0+dt+d+.02);
+  });
+}
+function sonidoSalto(){
+  if(!AC||silencio) return;
+  const o=AC.createOscillator(), g=AC.createGain(), t0=AC.currentTime;
+  o.type="square"; o.frequency.setValueAtTime(330,t0);
+  o.frequency.exponentialRampToValueAtTime(880,t0+.13);
+  g.gain.setValueAtTime(.12,t0); g.gain.exponentialRampToValueAtTime(.0005,t0+.16);
+  o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0+.18);
+}
+function sonidoMuerte(){                     // el "perdiste" de consola
+  if(!AC||silencio) return;
+  const t0=AC.currentTime;
+  // tres notas que bajan y un derrumbe final
+  [[523,0,.12],[392,.13,.12],[311,.26,.16]].forEach(([f,dt,d])=>{
+    const o=AC.createOscillator(), g=AC.createGain(), t=t0+dt;
+    o.type="square"; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(.14,t+.01);
+    g.gain.exponentialRampToValueAtTime(.0005,t+d);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+d+.02);
+  });
+  const o=AC.createOscillator(), g=AC.createGain(), t=t0+.44;
+  o.type="square"; o.frequency.setValueAtTime(300,t);
+  o.frequency.exponentialRampToValueAtTime(70,t+.42);
+  g.gain.setValueAtTime(.13,t); g.gain.exponentialRampToValueAtTime(.0005,t+.45);
+  o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+.47);
+}
+function sonidoVida(){                       // "vida extra" tipo consola
+  if(!AC||silencio) return;
+  const t0=AC.currentTime;
+  [[88,0],[91,.07],[100,.14],[96,.21],[98,.28],[103,.36]].forEach(([m,dt])=>{
+    const o=AC.createOscillator(), g=AC.createGain(), t=t0+dt;
+    o.type="square"; o.frequency.value=440*Math.pow(2,(m-69)/12);
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(.13,t+.008);
+    g.gain.exponentialRampToValueAtTime(.0005,t+.09);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+.11);
+  });
+}
+function sonidoPowerUp(){                    // arpegio ascendente
+  if(!AC||silencio) return;
+  const notas=[523,659,784,1047,1319];
+  notas.forEach((f,i)=>{
+    const o=AC.createOscillator(), g=AC.createGain(), t0=AC.currentTime+i*0.055;
+    o.type="square"; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t0);
+    g.gain.linearRampToValueAtTime(.13,t0+.008);
+    g.gain.exponentialRampToValueAtTime(.0005,t0+.10);
+    o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0+.12);
+  });
+}
+function sonidoNivel(){                      // fanfarria corta de arranque
+  if(!AC||silencio) return;
+  [[523,0,.10],[659,.10,.10],[784,.20,.10],[1047,.30,.28]].forEach(([f,dt,d])=>{
+    const o=AC.createOscillator(), g=AC.createGain(), t0=AC.currentTime+dt;
+    o.type="square"; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t0);
+    g.gain.linearRampToValueAtTime(.15,t0+.008);
+    g.gain.exponentialRampToValueAtTime(.0005,t0+d);
+    o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0+d+.02);
+  });
+}
+function sonidoWhoosh(){                     // para la moto que pasa volando
+  if(!AC||silencio) return;
+  const n=AC.sampleRate*0.5, buf=AC.createBuffer(1,n,AC.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2);
+  const src=AC.createBufferSource(), g=AC.createGain(), f=AC.createBiquadFilter(), t0=AC.currentTime;
+  src.buffer=buf; f.type="bandpass"; f.frequency.setValueAtTime(300,t0);
+  f.frequency.exponentialRampToValueAtTime(2600,t0+.45); f.Q.value=1.4;
+  g.gain.setValueAtTime(.18,t0); g.gain.exponentialRampToValueAtTime(.0005,t0+.5);
+  src.connect(f); f.connect(g); g.connect(AC.destination); src.start(t0);
+}
+function bocina(){
+  if(!AC||silencio) return;
+  const t0=AC.currentTime;
+  // dos bocinazos cortos, tipo moto
+  [0, 0.19].forEach(dt=>{
+    const o1=AC.createOscillator(), o2=AC.createOscillator();
+    const g=AC.createGain(), lp=AC.createBiquadFilter();
+    o1.type="square"; o2.type="sawtooth";
+    o1.frequency.value=418; o2.frequency.value=422;
+    lp.type="lowpass"; lp.frequency.value=2400; lp.Q.value=1.2;
+    const t=t0+dt;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(.20,t+.008);
+    g.gain.setValueAtTime(.20,t+.095);
+    g.gain.exponentialRampToValueAtTime(.0008,t+.15);
+    o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(AC.destination);
+    o1.start(t); o1.stop(t+.17); o2.start(t); o2.stop(t+.17);
+  });
+}
+function presentar(b, cb){
+  const el=document.getElementById("presenta");
+  document.getElementById("pr-img").src="motos/"+b.id+".png";
+  document.getElementById("pr-n").textContent=b.n;
+  document.getElementById("pr-s").textContent=b.spec;
+  const uiEl=document.getElementById("ui"), gar=document.getElementById("garage");
+  uiEl.style.opacity="0"; gar.style.opacity="0";
+  el.classList.add("on");
+  sonidoVida();
+  setTimeout(()=>{
+    el.classList.remove("on");
+    uiEl.style.opacity="1"; gar.style.opacity="1";
+    if(cb) cb();
+  }, 2100);
+}
+function boomLogo(){
+  const b=document.getElementById("boom");
+  if(!b) return;
+  b.classList.remove("on"); void b.offsetWidth; b.classList.add("on");
+}
+function ruido(dur=.4,vol=.14){
+  if(!AC||silencio) return;
+  const n=AC.sampleRate*dur, buf=AC.createBuffer(1,n,AC.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+  const src=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();
+  src.buffer=buf; f.type="bandpass"; f.frequency.value=1400; g.gain.value=vol;
+  src.connect(f); f.connect(g); g.connect(AC.destination); src.start();
+}
+
+/* =====================================================================
+   CANVAS
+   ===================================================================== */
+const cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+let W=0,H=0,DPR=1,PH=0;
+function medir(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=cv.clientWidth; H=cv.clientHeight;
+  cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+const zona = () => Math.max(H*0.40, H-PH-12);
+const horizonte = () => zona()*0.54;
+
+function rnd(seed){ let s=seed; return ()=>{ s=(s*16807)%2147483647; return (s-1)/2147483646; }; }
+const R=rnd(20261114);
+const CAPAS=[{vel:.16,col:"#1a0a3a",ed:[]},{vel:.34,col:"#12052b",ed:[]}];
+CAPAS[0].ed=Array.from({length:40},()=>({w:.038+R()*.05,h:.05+R()*.10}));
+CAPAS[1].ed=Array.from({length:30},()=>({w:.055+R()*.075,h:.08+R()*.13}));
+CAPAS.forEach(c=>{ let x=0; c.ed.forEach(e=>{ e.pos=x; x+=e.w; }); c.total=x; });
+const estrellas=Array.from({length:70},()=>({x:R(),y:R()*.5,r:R()*1.4+.4,a:R()*.7+.3}));
+
+let partes=[], confeti=[], t=0, velActual=0, velObjetivo=0, scrollX=0, boostT=0, gateT=0;
+let swap=null;           // {from,to,t}
+let CALIDAD=1, fps=60, _fr=0, _tf=0;
+let _gSky=null, _gSuelo=null, _gKey="";
+let _aura=null;
+function spriteAura(){
+  const c=document.createElement("canvas"); c.width=256; c.height=192;
+  const g=c.getContext("2d");
+  const gr=g.createRadialGradient(128,96,6,128,96,128);
+  gr.addColorStop(0,"rgba(255,255,255,0.55)");
+  gr.addColorStop(0.45,"rgba(255,255,255,0.32)");
+  gr.addColorStop(0.72,"rgba(235,245,255,0.13)");
+  gr.addColorStop(1,"rgba(255,255,255,0)");
+  g.fillStyle=gr; g.fillRect(0,0,256,192);
+  return c;
+}
+function gradientes(hor){
+  const k = Math.round(W)+"x"+Math.round(H)+"x"+Math.round(hor);
+  if(k===_gKey) return;
+  _gKey=k;
+  _gSky=ctx.createLinearGradient(0,0,0,hor);
+  _gSky.addColorStop(0,"#0a0420"); _gSky.addColorStop(.45,"#3b0a54");
+  _gSky.addColorStop(.82,"#a3166b"); _gSky.addColorStop(1,"#ff5f6d");
+  _gSuelo=ctx.createLinearGradient(0,hor,0,H);
+  _gSuelo.addColorStop(0,"#16072e"); _gSuelo.addColorStop(1,"#05010f");
+}
+let biciId="vmp_s5";
+const IMGS={};
+BIKES.forEach(b=>{ const im=new Image(); im.src="motos/"+b.id+".png"; IMGS[b.id]=im; });
+
+/* ---------- PAC-MAN Y FANTASMAS ---------- */
+const PAC = {activo:0, prox:420, x:-0.35, invertido:0};
+const CORTE = {activo:0, t0:0, dur:1400, tipo:"bien", logoHecho:false};
+
+function dibujarCorte(){
+  const p = Math.min(1, (performance.now()-CORTE.t0)/CORTE.dur);
+  const y = H*0.40;
+  const r = Math.max(16, Math.min(54, W*0.075));
+
+  ctx.fillStyle = CORTE.tipo==="bien" ? "rgba(6,2,18,0.94)" : "rgba(24,3,10,0.94)";
+  ctx.fillRect(0,0,W,H);
+
+  if(CORTE.tipo==="bien"){
+    // GANA: va hacia la derecha y los persigue a ellos
+    const x = (-0.5 + p*2.1)*W;
+    for(let i=0;i<4;i++) dibujarFantasma(x+150+i*70, y, r*0.95, "#3B6BFF", 1);
+    dibujarPacman(x, y, r*1.12, 1);
+  }else{
+    // PIERDE: huye para el otro lado (izquierda) y los fantasmas lo corren de atras
+    const x = (1.5 - p*2.1)*W;
+    for(let i=0;i<4;i++) dibujarFantasma(x+150+i*70, y, r*0.95, FANT_COL[i], -1);
+    dibujarPacman(x, y, r*1.12, -1);
+  }
+  if(p>=1) CORTE.activo = 0;
+}
+
+function corte(tipo, alTerminar){
+  if(tipo==="mal"){ sonidoMuerte(); }
+  CORTE.activo = 1; CORTE.t0 = performance.now();
+  CORTE.tipo = tipo; CORTE.logoHecho = false;
+  const uiEl = document.getElementById("ui");
+  uiEl.style.transition = "opacity .18s";
+  uiEl.style.opacity = "0";
+  document.getElementById("garage").style.opacity = "0";
+  setTimeout(()=>{
+    CORTE.activo = 0;
+    uiEl.style.opacity = "1";
+    document.getElementById("garage").style.opacity = "1";
+    if(alTerminar) alTerminar();
+  }, CORTE.dur);
+}
+const FANT_COL = ["#FF2D2D","#FFB8DE","#38E0F5","#FFA340"];
+
+function dibujarPacman(x,y,r,dir){
+  const ap = 0.06 + 0.20*Math.abs(Math.sin(t*7));
+  ctx.save(); ctx.translate(x,y); if(dir===-1) ctx.scale(-1,1);
+  ctx.fillStyle="#FFD400"; ctx.shadowColor="#FFD400"; ctx.shadowBlur=20;
+  ctx.beginPath(); ctx.moveTo(0,0);
+  ctx.arc(0,0,r, ap*Math.PI, (2-ap)*Math.PI);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function dibujarFantasma(x,y,r,col,dir){
+  ctx.save(); ctx.translate(x,y); if(dir===-1) ctx.scale(-1,1);
+  ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=16;
+  ctx.beginPath();
+  ctx.arc(0,-r*0.08,r,Math.PI,0);
+  ctx.lineTo(r,r*0.62);
+  const n=4;
+  for(let i=0;i<n;i++){
+    const x2 = r-(i+1)*(2*r/n);
+    ctx.quadraticCurveTo(x2+(r/n), r*1.02, x2, r*0.62);
+  }
+  ctx.closePath(); ctx.fill();
+  ctx.shadowBlur=0; ctx.fillStyle="#fff";
+  ctx.beginPath(); ctx.arc(-r*0.34,-r*0.18,r*0.27,0,7); ctx.arc(r*0.34,-r*0.18,r*0.27,0,7); ctx.fill();
+  ctx.fillStyle="#1a1aff";
+  ctx.beginPath(); ctx.arc(-r*0.18,-r*0.18,r*0.14,0,7); ctx.arc(r*0.50,-r*0.18,r*0.14,0,7); ctx.fill();
+  ctx.restore();
+}
+function actualizarPac(){
+  if(PAC.activo>0){
+    PAC.activo--; PAC.x+=0.011;
+    if(PAC.invertido>0) PAC.invertido--;
+    if(PAC.x>1.45) PAC.activo=0;
+  }else{
+    PAC.prox--;
+    if(PAC.prox<=0){ PAC.activo=330; PAC.x=-0.35; PAC.prox=500+Math.random()*400; }
+  }
+}
+function dibujarPac(hor,Z){
+  if(PAC.activo<=0) return;
+  const r=Math.max(11,Math.min(26,W*0.026));
+  const y=hor-Z*0.11;
+  const base=PAC.x*W;
+  ctx.save(); ctx.globalAlpha=.96;
+  if(PAC.invertido>0){
+    // GANASTE: los fantasmas huyen adelante y pacman los persigue
+    for(let i=0;i<4;i++) dibujarFantasma(base+185+i*44, y, r*0.95, "#3B6BFF", 1);
+    dibujarPacman(base+55, y, r*1.08, 1);
+  }else{
+    // normal: pacman adelante, los fantasmas atras
+    dibujarPacman(base+250, y, r*1.05, 1);
+    for(let i=0;i<4;i++) dibujarFantasma(base+i*44, y, r*0.95, FANT_COL[i], 1);
+  }
+  ctx.restore();
+}
+
+function pintar(){
+  t+=1/60;
+  if(CORTE.activo>0){ dibujarCorte(); requestAnimationFrame(pintar); return; }
+  const hor=horizonte(), Z=zona();
+
+  // cielo (degradado cacheado: no se recrea por cuadro)
+  gradientes(hor);
+  ctx.fillStyle=_gSky; ctx.fillRect(0,0,W,hor);
+
+  // estrellas
+  estrellas.forEach(e=>{
+    ctx.globalAlpha=e.a*(.55+.45*Math.sin(t*2+e.x*20));
+    ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(e.x*W,e.y*hor,e.r,0,7); ctx.fill();
+  });
+  ctx.globalAlpha=1;
+
+  // sol
+  const cx=W*0.74, cy=hor-Z*0.30, rad=Z*0.175;
+  const sg=ctx.createLinearGradient(0,cy-rad,0,cy+rad);
+  sg.addColorStop(0,"#ffe27a"); sg.addColorStop(.5,"#ff9a3d"); sg.addColorStop(1,"#ff2d78");
+  ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,rad,0,7); ctx.clip();
+  ctx.fillStyle=sg; ctx.fillRect(cx-rad,cy-rad,rad*2,rad*2);
+  ctx.fillStyle="#3b0a54";
+  for(let i=0;i<7;i++) ctx.fillRect(cx-rad, cy+rad*0.05+i*(rad*0.16), rad*2, rad*0.055+i*0.9);
+  ctx.restore();
+  ctx.save(); ctx.shadowColor="rgba(255,90,140,.85)"; ctx.shadowBlur=50;
+  ctx.beginPath(); ctx.arc(cx,cy,rad,0,7); ctx.strokeStyle="rgba(255,120,160,.35)"; ctx.lineWidth=2; ctx.stroke();
+  ctx.restore();
+
+  // ciudad
+  const vel=0.35+velActual/240;
+  CAPAS.forEach((capa,ci)=>{
+    const off=((scrollX*capa.vel*vel*3.2)%1)*capa.total;
+    capa.ed.forEach(e=>{
+      const w=e.w*W, h=e.h*Z;
+      let x=((e.pos-off)*W)%(capa.total*W);
+      if(x<0) x+=capa.total*W;
+      if(x>W) return;
+      ctx.fillStyle=capa.col; ctx.fillRect(x,hor-h,w+1,h);
+      ctx.fillStyle= ci?"rgba(126,232,255,.26)":"rgba(255,95,190,.20)";
+      for(let vy=hor-h+8; vy<hor-10; vy+=15)
+        for(let vx=x+5; vx<x+w-5; vx+=11)
+          if((((vx*7+vy*3)|0)%23)<3) ctx.fillRect(vx,vy,2.5,4.5);
+    });
+  });
+
+  // suelo
+  ctx.fillStyle=_gSuelo; ctx.fillRect(0,hor,W,H-hor);
+
+  // rejilla
+  ctx.save(); ctx.beginPath(); ctx.rect(0,hor,W,H-hor); ctx.clip();
+  ctx.strokeStyle="rgba(47,226,106,.30)"; ctx.lineWidth=1.4;
+  const fuga=W*0.5, prof=26;
+  for(let i=-prof;i<=prof;i++){
+    ctx.beginPath();
+    ctx.moveTo(fuga+i*(W*0.030), hor);
+    ctx.lineTo(fuga+i*(W*0.34), H);
+    ctx.stroke();
+  }
+  const paso=(scrollX*0.9)%1;
+  for(let k=0;k<14;k++){
+    const p=(k+paso)/14, y=hor+Math.pow(p,2.6)*(H-hor)*1.5;
+    if(y>H) continue;
+    ctx.globalAlpha=Math.min(1,p*2.4);
+    ctx.strokeStyle="rgba(126,232,255,.30)";
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+  ctx.globalAlpha=1; ctx.restore();
+
+  // horizonte neón
+  ctx.save(); ctx.strokeStyle="rgba(126,232,255,.85)"; ctx.lineWidth=2;
+  ctx.shadowColor="#7ee8ff"; ctx.shadowBlur=18;
+  ctx.beginPath(); ctx.moveTo(0,hor); ctx.lineTo(W,hor); ctx.stroke(); ctx.restore();
+
+  actualizarPac();
+  dibujarPac(hor,Z);
+
+  // líneas de velocidad
+  if(velActual>25){
+    const n=Math.min(26,velActual/6);
+    ctx.strokeStyle="rgba(255,255,255,"+Math.min(.5,velActual/260)+")"; ctx.lineWidth=2;
+    for(let i=0;i<n;i++){
+      const y=hor+((i*97+t*velActual*12)%(H-hor));
+      const x=W-((t*velActual*26+i*160)%(W*1.6));
+      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+70+velActual,y); ctx.stroke();
+    }
+  }
+
+  dibujarMoto(hor,Z);
+  if(gateT>0) dibujarGate(hor,Z);
+
+  partes=partes.filter(p=>p.vida>0);
+  partes.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=p.g; p.vida--;
+    ctx.globalAlpha=Math.max(0,p.vida/p.max); ctx.fillStyle=p.col;
+    ctx.fillRect(p.x,p.y,p.s,p.s); });
+  ctx.globalAlpha=1;
+
+  confeti=confeti.filter(c=>c.y<H+40);
+  confeti.forEach(c=>{ c.x+=c.vx; c.y+=c.vy; c.vy+=0.16; c.rot+=c.vr;
+    ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot);
+    ctx.fillStyle=c.col; ctx.fillRect(-c.s/2,-c.s/4,c.s,c.s/2); ctx.restore(); });
+
+  velActual+=(velObjetivo-velActual)*0.06;
+  document.getElementById("kmh").textContent=Math.round(velActual);
+  scrollX+=(0.4+velActual/165)*0.012;
+  if(swap && swap.t>0) swap.t--;
+
+  // si el equipo va lento, se apaga lo caro solo
+  _fr++;
+  if(_tf===0) _tf=performance.now();
+  else if(performance.now()-_tf>1600){
+    fps = _fr*1000/(performance.now()-_tf);
+    CALIDAD = fps<32 ? 0 : 1;
+    _fr=0; _tf=performance.now();
+  }
+  requestAnimationFrame(pintar);
+}
+
+function medirBici(id,Z,hor){
+  const im=IMGS[id];
+  if(!im||!im.complete||!im.width) return null;
+  const anchoMax=W*0.74;
+  const alto=Math.min((Z-hor)*1.55, anchoMax*(im.height/im.width));
+  const ancho=im.width*(alto/im.height);
+  const cy=Math.min(hor+(Z-hor)*0.55, Z-alto*0.5-10);
+  return {im, alto, ancho, cy, cx:W*0.47};
+}
+
+function dibujarMoto(hor,Z){
+  const bob=Math.sin(t*7)*2.2+(boostT>0?Math.sin(t*40)*3:0);
+  const incl=boostT>0?-0.05:Math.sin(t*2.2)*0.012;
+
+  // transición entre motos
+  let a=medirBici(biciId,Z,hor);
+  if(!a){                       // si la moto nueva todavía no cargó, seguimos con una que sí
+    const libres=S().bikes||["vmp_s5"];
+    for(let i=libres.length-1;i>=0;i--){ a=medirBici(libres[i],Z,hor); if(a) break; }
+  }
+  if(!a) return;
+  let salida=null, prog=0;
+  if(swap){
+    prog=1-swap.t/45;
+    salida=medirBici(swap.from,Z,hor);
+  }
+  const ease=x=>1-Math.pow(1-x,3);
+
+  // moto que se va
+  if(salida && swap.t>0){
+    const p=ease(prog);
+    ctx.save(); ctx.globalAlpha=1-p;
+    ctx.translate(salida.cx - p*W*0.55, salida.cy+bob); ctx.rotate(incl-p*0.25);
+    ctx.drawImage(salida.im, -salida.ancho/2, -salida.alto/2, salida.ancho, salida.alto);
+    ctx.restore();
+  }
+  // moto que llega
+  const entrada = swap ? ease(prog) : 1;
+  const dx = swap ? (1-entrada)*W*0.55 : 0;
+  const yy = a.cy+bob - (swap? (1-entrada)*26 : 0);
+
+  ctx.save(); ctx.globalAlpha=.4; ctx.fillStyle="#000";
+  ctx.beginPath(); ctx.ellipse(a.cx-dx, a.cy+a.alto*0.47, a.ancho*0.42, a.alto*0.055, 0,0,7); ctx.fill();
+  ctx.restore();
+
+  // AURA BLANCA (sprite cacheado, no degradado por cuadro)
+  if(!_aura) _aura = spriteAura();
+  const auraR = a.ancho*0.80;
+  ctx.save(); ctx.globalAlpha = CALIDAD? 1 : .7;
+  ctx.drawImage(_aura, a.cx-dx-auraR*1.22, a.cy-auraR*0.92, auraR*2.44, auraR*1.84);
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(a.cx-dx, yy); ctx.rotate(incl);
+  if(CALIDAD){
+    ctx.shadowColor = boostT>0 ? "rgba(47,226,106,.95)" : "rgba(255,255,255,.9)";
+    ctx.shadowBlur  = boostT>0 ? 40 : 16;
+  }
+  ctx.drawImage(a.im, -a.ancho/2, -a.alto/2, a.ancho, a.alto);
+  ctx.restore();
+
+  if(Math.random()<(boostT>0?0.9:0.16)){
+    partes.push({x:a.cx-a.ancho*0.42-dx, y:a.cy+a.alto*0.40,
+      vx:-2-Math.random()*3, vy:-Math.random()*1.6, g:.06, vida:20, max:20,
+      s:2+Math.random()*2, col: boostT>0?"#2FE26A":"#7ee8ff"});
+  }
+  if(boostT>0) boostT--;
+}
+
+function dibujarGate(hor,Z){
+  const p=1-Math.min(1,gateT/70);
+  const alto=(Z-hor)*1.7, ancho=alto*0.44, y=hor+(Z-hor)*0.52;
+  const x=W*0.47+(W*0.5)*(1-p);
+  ctx.save(); ctx.globalAlpha=.25+.55*p;
+  ctx.strokeStyle="#2FE26A"; ctx.lineWidth=4; ctx.shadowColor="#2FE26A"; ctx.shadowBlur=34;
+  ctx.strokeRect(x-ancho/2,y-alto/2,ancho,alto);
+  ctx.globalAlpha=.12+.2*p; ctx.fillStyle="#2FE26A";
+  ctx.fillRect(x-ancho/2,y-alto/2,ancho,alto);
+  ctx.restore(); gateT--;
+}
+
+/* =====================================================================
+   UI
+   ===================================================================== */
+const panel=document.getElementById("panel"), flash=document.getElementById("flash"),
+      grito=document.getElementById("grito"), banner=document.getElementById("banner");
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function garage(nueva){
+  const s=S(), libres=s.bikes||["vmp_s5"];
+  document.getElementById("garage").innerHTML = BIKES.map(b=>{
+    const on=libres.includes(b.id);
+    const esNueva = on && nueva===b.id;
+    return `<div class="slot ${on?'on':''} ${esNueva?'nueva':''}"><img src="motos/${b.id}.png" alt="${b.n}"></div>`;
+  }).join("");
+  document.getElementById("cont").innerHTML = libres.length+"<span>/7</span>";
+}
+function ui(html){ panel.innerHTML=html; garage(); requestAnimationFrame(()=>{ PH=panel.offsetHeight; }); }
+function gritar(txt){
+  grito.querySelector("span").textContent=txt;
+  grito.classList.remove("on"); void grito.offsetWidth; grito.classList.add("on");
+}
+function destello(t){ flash.className=t; setTimeout(()=>flash.className="",460); }
+function temblar(){
+  const st=document.getElementById("stage");
+  st.classList.add("shake"); setTimeout(()=>st.classList.remove("shake"),400);
+}
+function codigo(){
+  const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let c="";
+  for(let i=0;i<5;i++) c+=A[Math.floor(Math.random()*A.length)];
+  return "EVO-"+c;
+}
+
+/* ---------- PANTALLAS ---------- */
+function pantallaInicio(){
+  const n=nivelPend();
+  if(n===4) return S().codigo ? pantallaTicket() : pantallaRegistro();
+  velObjetivo=18; gateT=0;
+  biciId=biciDe().id;
+  ui(`<div class="card">
+      <h1>SIETE MOTOS.<br><em>UNA ES TUYA.</em></h1>
+      <p>Cada acierto te desbloquea una moto.</p>
+      <div class="btns"><button class="big" id="ir">${n===1?"EMPEZAR NIVEL 1":"SEGUIR NIVEL "+n}</button></div>
+      <div style="text-align:center;margin-top:10px">
+        ${(S().bikes||[]).length>1?'<button class="ghost" style="max-width:200px;margin:auto" onclick="pantallaGarage()">MI GARAJE</button>':''}
+      </div>
+    </div>`);
+  document.getElementById("ir").onclick=()=>{ audioInit(); entrarNivel(n); };
+}
+
+function pantallaGarage(){
+  const libres=S().bikes||["vmp_s5"];
+  velObjetivo=12; gateT=0;
+  ui(`<div class="card">
+      <div class="kicker">Tu garaje</div>
+      <h1>${libres.length} DE <em>7</em></h1>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+      ${BIKES.map(b=>{
+        const on=libres.includes(b.id);
+        return `<div style="background:rgba(255,255,255,${on?.08:.03});border:1px solid rgba(${on?'47,226,106':'255,255,255'},${on?'.5':'.1'});
+          border-radius:12px;padding:8px;text-align:center">
+          <img src="motos/${b.id}.png" style="width:100%;height:42px;object-fit:contain;${on?'':'filter:grayscale(1) brightness(.4);opacity:.5'}">
+          <div style="font-size:11px;margin-top:5px;color:${on?'#2FE26A':'#5a6b7d'}">${on?b.n:'???'}</div>
+          <div style="font-family:system-ui;font-weight:500;font-size:9px;color:#7f8fa3;margin-top:2px">${on?b.spec:''}</div>
+        </div>`;
+      }).join("")}
+      </div>
+      <button class="ghost" style="margin-top:12px" onclick="pantallaInicio()">VOLVER</button>
+    </div>`);
+}
+
+function entrarNivel(n){
+  const s=S();
+  if(s["n"+n]) return (n<3? entrarNivel(n+1) : pantallaTicket());
+  const pend=nivelPend();
+  if(n>pend) return pantallaOrden(pend);
+  velObjetivo=34; gateT=70;
+  arrancarNivel(n);
+}
+
+function arrancarNivel(n){
+  velObjetivo=46; gateT=70; beep([520],.1,"sine",.1);
+  setTimeout(()=>preguntar(n,0), 520);
+}
+
+function pantallaOrden(falta){
+  velObjetivo=8; gateT=0;
+  ui(`<div class="card">
+      <div class="kicker">Pará un segundo</div>
+      <h1>TODAVÍA NO<br><em>LLEGASTE</em></h1>
+      <p>Para este nivel tenés que pasar primero por <b style="color:#fff">${esc(NIVELES[falta].donde)}</b>.</p>
+      <div class="btns"><button class="big" onclick="entrarNivel(${falta})">IR AL NIVEL ${falta}</button></div>
+      <button class="ghost" style="margin-top:9px" onclick="pantallaInicio()">VOLVER</button>
+    </div>`);
+}
+
+function preguntar(n, qi){
+  const nv=NIVELES[n], pr=nv.preg[qi], s=S();
+  const st=(s.resp||{})[n+"_"+qi]||{mal:[]};
+  velObjetivo=22;
+  const letras=["A","B","C","D"];
+  ui(`<div class="card">
+      <div class="kicker">Nivel ${n} · ${nv.nombre} · pregunta ${qi+1} de 2</div>
+      <div class="q">${esc(pr.q)}</div>
+      <div class="ops">
+        ${pr.ops.map((o,i)=>`<button class="op ${st.mal.includes(i)?'mal':''}" ${st.mal.includes(i)?'disabled':''}
+            data-i="${i}" onclick="responder(${n},${qi},${i})"><b>${letras[i]}</b><span>${esc(o)}</span></button>`).join("")}
+      </div>
+      <div class="pista">💡 ${esc(pr.ayuda)}</div>
+    </div>`);
+}
+
+function responder(n, qi, elegido){
+  const pr=NIVELES[n].preg[qi];
+  const s=S(); s.resp=s.resp||{};
+  const st=s.resp[n+"_"+qi]||{mal:[]};
+
+  if(elegido===pr.ok){
+    // marcar botón correcto antes de avanzar
+    const btn=document.querySelector('.op[data-i="'+elegido+'"]');
+    if(btn){ btn.classList.add("bien"); btn.disabled=true; }
+    return setTimeout(()=>acierto(n,qi), 260);
+  }
+
+  st.mal.push(elegido); st.pista=true;
+  s.resp[n+"_"+qi]=st; save(s);
+  buzz(); destello("bad"); temblar();
+  if(navigator.vibrate) navigator.vibrate([40,50,40]);
+
+  const btn=document.querySelector('.op[data-i="'+elegido+'"]');
+  if(btn){ btn.classList.add("mal"); btn.disabled=true; }
+
+  // si ya tachó 3, queda una sola: se la revelamos y pasa
+  if(st.mal.length>=3){
+    const correcto=document.querySelector('.op[data-i="'+pr.ok+'"]');
+    if(correcto) correcto.classList.add("bien");
+    corte("mal", ()=>acierto(n,qi,true));
+    return;
+  }
+  // pantalla de corte: los fantasmas lo persiguen a el, y vuelve la pregunta con la ayuda
+  corte("mal", ()=>preguntar(n,qi));
+}
+
+function acierto(n,qi,conAyuda){
+  const pr=NIVELES[n].preg[qi];
+  const s=S(); s.bikes=s.bikes||["vmp_s5"];
+  s.resp=s.resp||{}; s.resp[n+"_"+qi]=Object.assign(s.resp[n+"_"+qi]||{mal:[]},{ok:true,conAyuda:!!conAyuda});
+
+  // desbloquear la siguiente moto
+  let nueva=null;
+  if(s.bikes.length<BIKES.length){
+    const nx=BIKES[s.bikes.length];
+    s.bikes.push(nx.id); nueva=nx; s.ultima=nx.id;
+  }
+  // nivel terminado cuando resolvió las 2 preguntas
+  const hechas=Object.keys(s.resp).filter(k=>k.startsWith(n+"_")&&s.resp[k].ok).length;
+  if(qi===NIVELES[n].preg.length-1 && !s["n"+n]) s["n"+n]=Date.now();
+  save(s);
+
+  destello("ok"); temblar(); boostT=64; velObjetivo=140; gateT=0;
+  bocina();
+  PAC.activo=340; PAC.x=-0.35; PAC.invertido=340;   // ahora el pacman los persigue a ellos
+
+  setTimeout(()=>{ beep([880,1320],.16,"triangle",.10); }, 340);
+  ruido(.4,.09);
+  if(navigator.vibrate) navigator.vibrate([25,35,25,35,60]);
+
+  if(nueva){
+    // cambio de moto con transición
+    swap={from:s.bikes[s.bikes.length-2], to:nueva.id, t:45};
+    biciId=nueva.id;
+    garage(nueva.id);
+  }
+
+  for(let i=0;i<34;i++){
+    partes.push({x:W*0.47, y:horizonte()+(zona()-horizonte())*0.52,
+      vx:(Math.random()-.5)*11, vy:(Math.random()-.9)*8, g:.22, vida:48, max:48,
+      s:2+Math.random()*3, col: Math.random()<.5?"#2FE26A":"#7ee8ff"});
+  }
+
+  // corte (pacman los persigue) -> presentacion de la moto -> siguiente pregunta
+  const avanzar = ()=>{
+    velObjetivo=26;
+    const ultima = qi===NIVELES[n].preg.length-1;
+    if(!ultima) return preguntar(n, qi+1);
+    if(n<3) return entrarNivel(n+1);
+    return pantallaRegistro();
+  };
+  corte("bien", ()=>{ if(nueva) presentar(nueva, avanzar); else avanzar(); });
+}
+
+/* ---------- REGISTRO ---------- */
+function pantallaRegistro(){
+  velObjetivo=14; gateT=0;
+  ui(`<div class="card">
+      <div class="kicker">Nivel 3 de 3 · la carpa</div>
+      <h1>FICHA DE<br><em>PILOTO</em></h1>
+      <p>Te damos tu <b style="color:#fff">número para el sorteo</b> de hoy ${CFG.horaSorteo}.
+         Te lo mandamos por WhatsApp. Es personal e intransferible.</p>
+      <label>Nombre</label><input id="f_nom" autocomplete="given-name" placeholder="Juan">
+      <label>Apellido</label><input id="f_ape" autocomplete="family-name" placeholder="Pérez">
+      <label>WhatsApp</label><input id="f_wa" type="tel" inputmode="tel" placeholder="3624 123456">
+      <div class="chk"><input type="checkbox" id="f_ok"><span>Autorizo a EVOBIKE a enviarme mi número de participante por WhatsApp. Tengo 16 años o más.</span></div>
+      <div id="msg"></div>
+      <div class="btns"><button class="big" onclick="enviarRegistro()">OBTENER MI NÚMERO</button></div>
+    </div>`);
+}
+function normalizaWa(v){
+  let d=(v||"").replace(/\D/g,"");
+  if(d.startsWith("54")) d=d.slice(2);
+  if(d.startsWith("9")) d=d.slice(1);
+  if(d.startsWith("0")) d=d.slice(1);
+  return d;
+}
+function enviarRegistro(){
+  const nom=document.getElementById("f_nom").value.trim();
+  const ape=document.getElementById("f_ape").value.trim();
+  const wa=normalizaWa(document.getElementById("f_wa").value);
+  const ok=document.getElementById("f_ok").checked;
+  const msg=document.getElementById("msg");
+  const err=t=>{ msg.innerHTML=`<div class="err">${t}</div>`; };
+  if(nom.length<2) return err("Poné tu nombre.");
+  if(ape.length<2) return err("Poné tu apellido.");
+  if(wa.length<8||wa.length>11) return err("Ese WhatsApp no parece completo. Poné el número con código de área.");
+  if(!ok) return err("Marcá la casilla para poder anotarte.");
+  const s=S();
+  if(!s.n1||!s.n2) return pantallaOrden(nivelPend());
+  if(!s.codigo) s.codigo=codigo();
+  s.nom=nom; s.ape=ape; s.wa=wa; s.n3=s.n3||Date.now();
+  save(s);
+  beep([700,900,1200,1600],.14,"triangle",.13);
+  for(let i=0;i<60;i++) confeti.push({x:W/2+(Math.random()-.5)*170, y:H*0.3,
+    vx:(Math.random()-.5)*7, vy:-Math.random()*9-2, rot:Math.random()*6, vr:(Math.random()-.5)*.35,
+    s:6+Math.random()*7, col:["#2FE26A","#7ee8ff","#ff5fbe","#ffd166","#fff"][i%5]});
+  gritar("¡ESTÁS ADENTRO!");
+  setTimeout(pantallaTicket, 800);
+}
+
+/* ---------- TICKET ---------- */
+function pantallaTicket(){
+  const s=S();
+  if(!s.codigo) return pantallaRegistro();
+  velObjetivo=34; gateT=0; biciId="urbex";
+  const texto=`EVOBIKE · ${CFG.evento}\nNombre: ${s.nom} ${s.ape}\nMi número para el sorteo: ${s.codigo}\nSorteo: hoy ${CFG.horaSorteo}`;
+  ui(`<div class="card ticket">
+      <div class="kicker">Estás anotado</div>
+      <div class="cod">${esc(s.codigo)}</div>
+      <div class="sub">${esc(s.nom)} ${esc(s.ape)}</div>
+      <div class="dato"><b>Con este código participás del sorteo de una EVOBIKE SOL PRO, hoy ${CFG.horaSorteo}.</b><br>
+        Es personal e intransferible y tenés que estar presente con él.</div>
+      <div class="pista">Te lo mandamos por WhatsApp para que no lo pierdas aunque cierres la página.
+        Guardalo: es lo único que necesitás para el sorteo.</div>
+      <div class="btns"><a class="big" style="text-decoration:none;color:#04120a"
+        href="https://wa.me/${CFG.WA_EVOBIKE}?text=${encodeURIComponent(texto)}" target="_blank" rel="noopener">
+        MANDÁRMELO POR WHATSAPP</a></div>
+      <div class="pista" style="margin-top:10px">Este número quedó guardado en este teléfono.
+        Si no sos vos, o querés jugar otra vez, tocá abajo.</div>
+      <button class="ghost" style="margin-top:8px" onclick="pantallaInicio()">VOLVER AL INICIO</button>
+      <button class="ghost" style="margin-top:8px;font-size:12px;opacity:.75" onclick="empezarDeCero()">↺ NO SOY YO · EMPEZAR DE NUEVO</button>
+    </div>`);
+}
+
+/* =====================================================================
+   ARRANQUE
+   ===================================================================== */
+medir(); pintar(); garage();
+document.getElementById("mute").onclick=()=>{
+  audioInit(); silencio=!silencio;
+  localStorage.setItem(KEY+".mute", silencio?"1":"0");
+  document.getElementById("mute").textContent = silencio?"🔇":"🔊";
+  aplicarMute(); if(!silencio) beep([880],.08,"sine",.08);
+};
+if(silencio) document.getElementById("mute").textContent="🔇";
+document.getElementById("intro").addEventListener("pointerdown", function(){
+  audioInit(); sonidoNivel();
+  if(pasoSec===1) arrancarSecuencia();
+}, {once:true});
+// si nadie toca, sigue igual (sin sonido) a los 4 segundos
+setTimeout(()=>{ if(pasoSec===1) arrancarSecuencia(); }, 2600);
+
+const ci=document.getElementById("cupcoImg");
+if(ci){ ci.onload=()=>{ ci.style.display="block"; const t=document.getElementById("cupcoTxt"); if(t) t.style.display="none"; }; }
+document.body.addEventListener("pointerdown",()=>audioInit(),{once:true});
+window.addEventListener("resize",()=>{ medir(); PH=panel.offsetHeight; });
+
+const qs=new URLSearchParams(location.search);
+const nParam=parseInt(qs.get("n"),10);
+if(qs.get("reset")==="1") localStorage.removeItem(KEY);
+
+biciId=biciDe().id;
+
+function irA(){
+  if([1,2,3].includes(nParam)){
+    const s=S();
+    if(!s["n"+nParam] && nParam>nivelPend()) pantallaOrden(nParam);
+    else entrarNivel(nParam);
+  } else {
+    pantallaInicio();
+  }
+}
+
+function empezarDeCero(){
+  localStorage.removeItem(KEY);
+  location.replace(location.pathname);
+}
+function verIntro(){
+  const el=document.getElementById("intro");
+  el.style.display="flex";
+  el.classList.remove("off");
+}
+let pasoSec=1, secTimer=null, secArrancada=false;
+function irPaso(n){
+  pasoSec=n;
+  [1,2,3].forEach(i=>{
+    const e=document.getElementById("p"+i);
+    if(e) e.classList.toggle("on", i===n);
+  });
+  if(n===2){
+    const b=document.getElementById("biciVuela");
+    if(b){ b.classList.remove("vuela"); void b.offsetWidth; b.classList.add("vuela"); }
+    sonidoWhoosh(); setTimeout(sonidoMoneda, 140);
+  }
+  if(n===3) sonidoPowerUp();
+}
+function arrancarSecuencia(){
+  if(secArrancada) return;
+  secArrancada=true;
+  if(secTimer) clearTimeout(secTimer);
+  irPaso(2);
+  secTimer=setTimeout(()=>irPaso(3), 3300);
+}
+function empezarJuego(){
+  audioInit();
+  const el=document.getElementById("intro");
+  el.classList.add("off");
+  setTimeout(()=>{ el.style.display="none"; }, 520);
+  const s=S(); s.vioIntro=1; save(s);
+  musicaOn();
+  beep([520,780],.16,"triangle",.13);
+  setTimeout(irA, 260);
+}
+
+// la intro se ve la primera vez (o si tocan el logo)
+if(S().vioIntro){
+  const el=document.getElementById("intro");
+  el.style.display="none";
+  irA();
+}
+</script>
+</body>
+</html>
