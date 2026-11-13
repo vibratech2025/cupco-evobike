@@ -311,7 +311,9 @@
 /* =====================================================================
    CONFIG
    ===================================================================== */
-const CFG = { WA_EVOBIKE:"5493624000000", horaSorteo:"20:30", evento:"CupCo Fest" };
+const CFG = { WA_EVOBIKE:"", horaSorteo:"20:30", evento:"CupCo Fest" };
+// Poné acá el WhatsApp real de EVOBIKE (con 549...) y vuelve el botón de WhatsApp.
+const HAY_WA = CFG.WA_EVOBIKE.replace(/\D/g,"").length >= 10;
 const KEY = "evobike_cupco_v3";
 
 /* La línea completa. Se desbloquean en este orden: arrancás en la más
@@ -973,8 +975,9 @@ function pantallaInicio(){
       <h1>SIETE MOTOS.<br><em>UNA ES TUYA.</em></h1>
       <p>Cada acierto te desbloquea una moto.</p>
       <div class="btns"><button class="big" id="ir">${n===1?"EMPEZAR NIVEL 1":"SEGUIR NIVEL "+n}</button></div>
-      <div style="text-align:center;margin-top:10px">
-        ${(S().bikes||[]).length>1?'<button class="ghost" style="max-width:200px;margin:auto" onclick="pantallaGarage()">MI GARAJE</button>':''}
+      <div style="text-align:center;margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        ${(S().bikes||[]).length>1?'<button class="ghost" style="max-width:170px;font-size:12px" onclick="pantallaGarage()">MI GARAJE</button>':''}
+        <button class="ghost" style="max-width:170px;font-size:12px;opacity:.75" onclick="empezarDeCero()">↺ EMPEZAR DE NUEVO</button>
       </div>
     </div>`);
   document.getElementById("ir").onclick=()=>{ audioInit(); entrarNivel(n); };
@@ -1005,7 +1008,7 @@ function entrarNivel(n){
   const s=S();
   if(s["n"+n]) return (n<3? entrarNivel(n+1) : pantallaTicket());
   const pend=nivelPend();
-  if(n>pend) return pantallaOrden(pend);
+  if(n>pend && !LIBRE) return pantallaOrden(pend);
   velObjetivo=34; gateT=70;
   arrancarNivel(n);
 }
@@ -1128,11 +1131,11 @@ function pantallaRegistro(){
       <div class="kicker">Nivel 3 de 3 · la carpa</div>
       <h1>FICHA DE<br><em>PILOTO</em></h1>
       <p>Te damos tu <b style="color:#fff">número para el sorteo</b> de hoy ${CFG.horaSorteo}.
-         Te lo mandamos por WhatsApp. Es personal e intransferible.</p>
+         Es personal e intransferible.</p>
       <label>Nombre</label><input id="f_nom" autocomplete="given-name" placeholder="Juan">
       <label>Apellido</label><input id="f_ape" autocomplete="family-name" placeholder="Pérez">
       <label>WhatsApp</label><input id="f_wa" type="tel" inputmode="tel" placeholder="3624 123456">
-      <div class="chk"><input type="checkbox" id="f_ok"><span>Autorizo a EVOBIKE a enviarme mi número de participante por WhatsApp. Tengo 16 años o más.</span></div>
+      <div class="chk"><input type="checkbox" id="f_ok"><span>Autorizo a EVOBIKE a contactarme por mi número de participante. Tengo 16 años o más.</span></div>
       <div id="msg"></div>
       <div class="btns"><button class="big" onclick="enviarRegistro()">OBTENER MI NÚMERO</button></div>
     </div>`);
@@ -1180,11 +1183,14 @@ function pantallaTicket(){
       <div class="sub">${esc(s.nom)} ${esc(s.ape)}</div>
       <div class="dato"><b>Con este código participás del sorteo de una EVOBIKE SOL PRO, hoy ${CFG.horaSorteo}.</b><br>
         Es personal e intransferible y tenés que estar presente con él.</div>
-      <div class="pista">Te lo mandamos por WhatsApp para que no lo pierdas aunque cierres la página.
-        Guardalo: es lo único que necesitás para el sorteo.</div>
-      <div class="btns"><a class="big" style="text-decoration:none;color:#04120a"
-        href="https://wa.me/${CFG.WA_EVOBIKE}?text=${encodeURIComponent(texto)}" target="_blank" rel="noopener">
-        MANDÁRMELO POR WHATSAPP</a></div>
+      <div class="pista">${HAY_WA
+        ? "Te lo mandamos por WhatsApp para que no lo pierdas aunque cierres la página."
+        : "Sacale una captura o copialo. Guardalo: es lo único que necesitás para el sorteo."}</div>
+      ${HAY_WA
+        ? `<div class="btns"><a class="big" style="text-decoration:none;color:#04120a"
+             href="https://wa.me/${CFG.WA_EVOBIKE}?text=${encodeURIComponent(texto)}" target="_blank" rel="noopener">
+             MANDÁRMELO POR WHATSAPP</a></div>`
+        : `<div class="btns"><button class="big" id="copiar">COPIAR MI NÚMERO</button></div>`}
       <div class="pista" style="margin-top:10px">Este número quedó guardado en este teléfono.
         Si no sos vos, o querés jugar otra vez, tocá abajo.</div>
       <button class="ghost" style="margin-top:8px" onclick="pantallaInicio()">VOLVER AL INICIO</button>
@@ -1216,6 +1222,7 @@ document.body.addEventListener("pointerdown",()=>audioInit(),{once:true});
 window.addEventListener("resize",()=>{ medir(); PH=panel.offsetHeight; });
 
 const qs=new URLSearchParams(location.search);
+const LIBRE = qs.get("libre")==="1";   // modo prueba: deja saltar de nivel
 const nParam=parseInt(qs.get("n"),10);
 if(qs.get("reset")==="1") localStorage.removeItem(KEY);
 
@@ -1231,6 +1238,25 @@ function irA(){
   }
 }
 
+function copiarCodigo(){
+  const s=S();
+  const txt = "EVOBIKE · Mi número para el sorteo de la SOL PRO es "+s.codigo+
+              " ("+((s.nom||"")+" "+(s.ape||"")).trim()+")";
+  const listo = ()=>{
+    const b=document.getElementById("copiar");
+    if(b){ b.textContent="¡COPIADO!"; setTimeout(()=>{ b.textContent="COPIAR MI NÚMERO"; }, 1800); }
+    sonidoMoneda();
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(listo).catch(()=>respaldo());
+  } else respaldo();
+  function respaldo(){
+    const t=document.createElement("textarea");
+    t.value=txt; document.body.appendChild(t); t.select();
+    try{ document.execCommand("copy"); listo(); }catch(e){ alert(txt); }
+    document.body.removeChild(t);
+  }
+}
 function empezarDeCero(){
   localStorage.removeItem(KEY);
   location.replace(location.pathname);
