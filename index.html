@@ -1166,6 +1166,12 @@ function pantallaRegistro(){
       <div class="btns"><button class="big" onclick="enviarRegistro()">OBTENER MI NÚMERO</button></div>
     </div>`);
 }
+function telWa(d){
+  const n=(d||"").replace(/\D/g,"");
+  if(!n) return "";
+  if(n.startsWith("54")) return n;
+  return "549"+n;                      // celular argentino
+}
 function normalizaWa(v){
   let d=(v||"").replace(/\D/g,"");
   if(d.startsWith("54")) d=d.slice(2);
@@ -1209,17 +1215,11 @@ function pantallaTicket(){
       <div class="sub">${esc(s.nom)} ${esc(s.ape)}</div>
       <div class="dato"><b>Con este código participás del sorteo de una EVOBIKE SOL PRO, hoy ${CFG.horaSorteo}.</b><br>
         Es personal e intransferible y tenés que estar presente con él.</div>
-      <div class="pista">${HAY_WA
-        ? "Te lo mandamos por WhatsApp para que no lo pierdas aunque cierres la página."
-        : "Sacale una captura o copialo. Guardalo: es lo único que necesitás para el sorteo."}</div>
-      ${HAY_WA
-        ? `<div class="btns"><a class="big" style="text-decoration:none;color:#04120a"
-             href="https://wa.me/${CFG.WA_EVOBIKE}?text=${encodeURIComponent(texto)}" target="_blank" rel="noopener">
-             MANDÁRMELO POR WHATSAPP</a></div>`
-        : `<div class="btns"><button class="big" id="copiar">COPIAR MI NÚMERO</button></div>`}
-      <div class="pista" style="margin-top:10px">Este número quedó guardado en este teléfono.
-        Si no sos vos, o querés jugar otra vez, tocá abajo.</div>
-      <button class="ghost" style="margin-top:8px" onclick="pantallaInicio()">VOLVER AL INICIO</button>
+      <div class="pista">Mandátelo por WhatsApp: te queda guardado y no lo perdés aunque cierres la página.</div>
+      <div class="btns"><a class="big" style="text-decoration:none;color:#04120a"
+        href="https://wa.me/${telWa(s.wa)}?text=${encodeURIComponent(texto)}" target="_blank" rel="noopener">
+        ENVIARME EL CÓDIGO POR WHATSAPP</a></div>
+      <button class="ghost" style="margin-top:8px;font-size:12px" id="copiar" onclick="copiarCodigo()">COPIAR MI NÚMERO</button>
       <button class="ghost" style="margin-top:8px;font-size:12px;opacity:.75" onclick="empezarDeCero()">↺ NO SOY YO · EMPEZAR DE NUEVO</button>
     </div>`);
 }
