@@ -208,6 +208,12 @@
            opacity:.85;animation:latido 1.8s infinite}
   .in-pre{font-family:system-ui,sans-serif;font-weight:800;font-size:clamp(13px,4vw,18px);
           letter-spacing:.24em;color:#cfe3f5}
+  .in-after{opacity:0;transform:translateY(16px);transition:opacity .5s,transform .5s;text-align:center;
+            font-size:clamp(19px,5.6vw,30px);line-height:1.08;letter-spacing:-.6px;color:#fff;
+            text-shadow:0 0 26px rgba(255,212,0,.5)}
+  .in-after.on{opacity:1;transform:none}
+  .in-after em{font-style:normal;background:linear-gradient(180deg,#fff,#FFD400 75%);
+               -webkit-background-clip:text;background-clip:text;color:transparent}
   .in-sol{font-size:clamp(44px,14vw,86px);letter-spacing:-2px;line-height:.95;
           background:linear-gradient(180deg,#fff,#FFD400 55%,#ff8a00);
           -webkit-background-clip:text;background-clip:text;color:transparent;
@@ -292,12 +298,10 @@
   <div id="intro">
     <div class="paso on" id="p1">
       <div class="in-log"><img src="img/logo.png" alt="EVOBIKE"></div>
-      <div class="in-title">EVOBIKE</div>
     </div>
     <div class="paso" id="p2">
-      <div class="in-pre">PARTICIPÁ POR UNA</div>
-      <div class="in-sol">SOL PRO</div>
       <img id="biciVuela" src="motos/sol_pro.png" alt="">
+      <div class="in-after" id="p2txt">ESA MOTO QUE PASÓ<br><em>PUEDE SER HOY TUYA</em></div>
     </div>
     <div class="paso" id="p3">
       <div class="in-promesa">GANÁ EL JUEGO Y<br>ASEGURA TU LUGAR</div>
@@ -1275,8 +1279,12 @@ function irPaso(n){
   });
   if(n===2){
     const b=document.getElementById("biciVuela");
+    const t=document.getElementById("p2txt");
+    if(t) t.classList.remove("on");
     if(b){ b.classList.remove("vuela"); void b.offsetWidth; b.classList.add("vuela"); }
-    sonidoWhoosh(); setTimeout(sonidoMoneda, 140);
+    sonidoWhoosh();
+    // cuando la moto ya paso, recien ahi aparece el texto
+    setTimeout(()=>{ if(t){ t.classList.add("on"); sonidoMoneda(); } }, 2300);
   }
   if(n===3) sonidoPowerUp();
 }
@@ -1285,7 +1293,7 @@ function arrancarSecuencia(){
   secArrancada=true;
   if(secTimer) clearTimeout(secTimer);
   irPaso(2);
-  secTimer=setTimeout(()=>irPaso(3), 3300);
+  secTimer=setTimeout(()=>irPaso(3), 4700);
 }
 function empezarJuego(){
   audioInit();
