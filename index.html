@@ -540,6 +540,28 @@ function sonidoWhoosh(){                     // para la moto que pasa volando
   g.gain.setValueAtTime(.18,t0); g.gain.exponentialRampToValueAtTime(.0005,t0+.5);
   src.connect(f); f.connect(g); g.connect(AC.destination); src.start(t0);
 }
+function sonidoAplausos(){
+  if(!AC||silencio) return;
+  const dur=2.2, sr=AC.sampleRate, n=Math.floor(sr*dur);
+  const buf=AC.createBuffer(1,n,sr), d=buf.getChannelData(0);
+  const env=new Float32Array(n);
+  for(let k=0;k<95;k++){
+    const t0=Math.pow(Math.random(),0.75)*dur*0.9;
+    const s0=Math.floor(t0*sr), largo=Math.floor(0.055*sr);
+    for(let i=0;i<largo && s0+i<n;i++){
+      const v=Math.exp(-(i/sr)*75);
+      if(v>env[s0+i]) env[s0+i]=v;
+    }
+  }
+  for(let i=0;i<n;i++){
+    const t=i/sr;
+    const fade=Math.min(1,t/0.12)*Math.min(1,(dur-t)/0.45);
+    d[i]=(Math.random()*2-1)*env[i]*0.55*fade;
+  }
+  const src=AC.createBufferSource(), g=AC.createGain(), f=AC.createBiquadFilter();
+  src.buffer=buf; f.type="bandpass"; f.frequency.value=2300; f.Q.value=0.6; g.gain.value=1.0;
+  src.connect(f); f.connect(g); g.connect(AC.destination); src.start();
+}
 function bocina(){
   if(!AC||silencio) return;
   const t0=AC.currentTime;
@@ -1097,7 +1119,7 @@ function acierto(n,qi,conAyuda){
   save(s);
 
   destello("ok"); temblar(); boostT=64; velObjetivo=140; gateT=0;
-  bocina();
+  sonidoAplausos();
   PAC.activo=340; PAC.x=-0.35; PAC.invertido=340;   // ahora el pacman los persigue a ellos
 
   setTimeout(()=>{ beep([880,1320],.16,"triangle",.10); }, 340);

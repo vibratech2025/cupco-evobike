@@ -2,157 +2,276 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>EVOBIKE · Sorteo</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>EVOBIKE · Sorteo SOL PRO</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  :root{--v:#2FE26A;--bg:#05070A;--card:#0C1218;--line:#1C2731}
-  body{background:var(--bg);color:#EAF0F5;font-family:"Arial Black",Arial,sans-serif;padding:20px;
-       min-height:100vh;display:flex;flex-direction:column;align-items:center}
-  .wrap{width:100%;max-width:620px}
-  .eb{font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:11px;letter-spacing:.16em;color:var(--v);text-transform:uppercase}
-  h1{font-size:26px;line-height:1.05;margin:6px 0 14px}
-  h1 em{font-style:normal;color:var(--v)}
-  textarea{width:100%;height:140px;background:#0A1017;border:1px solid var(--line);border-radius:12px;
-           padding:12px;color:#fff;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.5;outline:none}
-  textarea:focus{border-color:var(--v)}
-  .btn{width:100%;border:0;border-radius:14px;padding:17px;font-size:16px;font-family:"Arial Black",Arial,sans-serif;
-       font-weight:900;background:var(--v);color:#04120A;cursor:pointer;margin-top:12px}
-  .btn.ghost{background:transparent;color:#EAF0F5;border:1px solid var(--line)}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px}
-  .p{font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:#93A1AE}
-  .num{font-size:20px;color:var(--v)}
-  .ganador{font-size:64px;line-height:1;color:var(--v);text-align:center;margin:18px 0 6px;word-break:break-word}
-  .sub{font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#C9D4DE;text-align:center;line-height:1.5}
-  .centro{text-align:center}
-  .oculto{display:none}
-  .lista{max-height:210px;overflow:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;
-         color:#93A1AE;line-height:1.7;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+  :root{--verde:#2FE26A;--amar:#FFD400;--fondo:#05010f}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;background:var(--fondo);color:#fff;overflow:hidden;
+    font-family:"Arial Black",Arial,sans-serif}
+  body{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 40%,#1b0740 0%,#0a0420 55%,#05010f 100%)}
+
+  #cfg{position:fixed;inset:0;z-index:20;background:rgba(5,1,15,.97);display:flex;
+    flex-direction:column;gap:14px;padding:22px;align-items:center;justify-content:center}
+  #cfg h2{font-size:19px;letter-spacing:-.5px;text-align:center}
+  #cfg p{font-family:system-ui,sans-serif;font-weight:500;font-size:12.5px;color:#9fb0c6;
+    text-align:center;max-width:520px;line-height:1.5}
+  textarea{width:min(92vw,560px);height:32vh;background:#0d0820;color:#dfe9f5;border:1px solid #2a2140;
+    border-radius:12px;padding:12px;font-family:ui-monospace,monospace;font-size:12px;resize:none}
+  .btn{font-family:"Arial Black",sans-serif;border:0;border-radius:16px;cursor:pointer;
+    background:linear-gradient(180deg,#5cff95,#2FE26A 60%,#12c452);color:#04120a;
+    padding:16px 34px;font-size:17px;letter-spacing:-.5px;
+    box-shadow:0 6px 0 #0d7a35,0 0 44px rgba(47,226,106,.55)}
+  .btn:active{transform:translateY(3px);box-shadow:0 3px 0 #0d7a35}
+  .ghost{background:transparent;color:#8fb0c4;border:1px solid #2a2140;box-shadow:none;
+    font-size:12px;padding:10px 18px;font-family:system-ui,sans-serif;font-weight:600}
+
+  /* ---------- escenario ---------- */
+  #show{position:relative;width:100%;height:100%;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2.2vh}
+  .cab{font-size:clamp(11px,2.4vw,15px);letter-spacing:.34em;color:var(--verde);opacity:.9}
+  #ruleta{font-size:clamp(32px,10vw,86px);letter-spacing:-3px;text-align:center;line-height:1;
+    min-height:1.1em;max-width:94vw;overflow:hidden;white-space:nowrap;
+    text-shadow:0 0 40px rgba(47,226,106,.55)}
+  #ruleta.chico{font-size:clamp(20px,5vw,40px);letter-spacing:-1px;color:#cfe3f5}
+  #sub{font-family:system-ui,sans-serif;font-weight:600;font-size:clamp(11px,2.4vw,15px);
+    color:#8fb0c4;letter-spacing:.08em;text-align:center;min-height:1.2em}
+  #contador{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:min(46vh,44vw);color:var(--amar);text-shadow:0 0 90px rgba(255,212,0,.9);
+    opacity:0;pointer-events:none;z-index:9}
+
+  #win{position:fixed;inset:0;z-index:10;display:none;flex-direction:column;align-items:center;
+    justify-content:center;gap:2vh;background:radial-gradient(circle at 50% 45%,#24103f,#05010f 75%);
+    text-align:center;padding:20px}
+  #win.on{display:flex}
+  #win .feliz{font-size:clamp(13px,3.4vw,20px);letter-spacing:.3em;color:var(--amar)}
+  #win .nombre{font-size:clamp(34px,11vw,96px);line-height:.95;letter-spacing:-3px;max-width:94vw;
+    background:linear-gradient(180deg,#fff,#2FE26A 70%);-webkit-background-clip:text;
+    background-clip:text;color:transparent;filter:drop-shadow(0 0 46px rgba(47,226,106,.85));
+    animation:entra .7s cubic-bezier(.2,.9,.2,1.4) both}
+  #win .cod{font-family:ui-monospace,monospace;font-size:clamp(15px,4vw,28px);letter-spacing:.16em;
+    color:var(--amar);animation:entra .7s .25s both}
+  @keyframes entra{0%{transform:scale(.4);opacity:0}100%{transform:none;opacity:1}}
+  #confeti{position:fixed;inset:0;pointer-events:none;z-index:11}
+  .fila{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="eb">EVOBIKE · CUPCO FEST</div>
-  <h1 id="tit">PANTALLA DE <em>SORTEO</em></h1>
 
-  <div id="carga">
-    <div class="card">
-      <p class="p"><b style="color:#fff">1.</b> Abrí el chat de WhatsApp de EVOBIKE y usá
-        <b style="color:#fff">Exportar chat → sin archivos</b>.<br>
-        <b style="color:#fff">2.</b> Copiá todo el texto y pegálo acá abajo (o pegá los códigos, uno por línea).<br>
-        <b style="color:#fff">3.</b> Tocá «CARGAR» y después «SORTEAR».</p>
-      <textarea id="txt" placeholder="EVOBIKE · CupCo Fest
-Nombre: Juan Pérez
-Mi número para el sorteo: EVO-7K3
-Sorteo: hoy 20:30
+<div id="cfg">
+  <h2>CARGAR PARTICIPANTES</h2>
+  <p>Pegá acá los mensajes de WhatsApp (con los códigos EVO-XXXXX).<br>
+     También podés tocar <b>Abrir sin datos</b> para ver la animación.</p>
+  <textarea id="txt" placeholder="Juan Pérez
+EVOBIKE · Mi número para el sorteo de la SOL PRO es EVO-7K3XM (Juan Perez)
 
-EVOBIKE · CupCo Fest
-Nombre: María Gómez
-Mi número para el sorteo: EVO-B92
-Sorteo: hoy 20:30"></textarea>
-      <button class="btn" onclick="cargarLista()">CARGAR LISTA</button>
-      <button class="btn ghost" onclick="desdeLocal()">Usar los que se anotaron en ESTE teléfono</button>
-    </div>
+María Gómez
+EVOBIKE · Mi número ... EVO-9B2LP (Maria Gomez)"></textarea>
+  <div class="fila">
+    <button class="btn" onclick="cargar()">CARGAR</button>
+    <button class="btn ghost" onclick="cargar(true)">ABRIR SIN DATOS</button>
   </div>
+  <div id="msg" style="font-family:system-ui;font-size:12px;color:#ff7b7b;min-height:1em"></div>
+</div>
 
-  <div id="panel" class="oculto">
-    <div class="card">
-      <div class="eb">Participantes cargados</div>
-      <div class="num" id="cont">0</div>
-      <div class="lista" id="lista"></div>
-      <button class="btn ghost" onclick="reiniciar()" style="margin-top:14px">CAMBIAR LISTA</button>
-    </div>
-    <button class="btn" id="btnSortear" onclick="sortear()" style="margin-top:16px;font-size:20px;padding:24px">SORTEAR</button>
-  </div>
+<div id="show">
+  <div class="cab">EVOBIKE · SORTEO SOL PRO</div>
+  <div id="ruleta" class="chico">—</div>
+  <div id="sub"></div>
+  <button class="btn" id="go" onclick="arrancar()">SORTEAR</button>
+  <button class="btn ghost" onclick="otra()">OTRA VEZ</button>
+</div>
 
-  <div id="resultado" class="oculto">
-    <div class="card">
-      <div class="eb centro">GANADOR</div>
-      <div class="ganador" id="ganador">—</div>
-      <div class="sub" id="quien"></div>
-      <button class="btn" onclick="otra()">SORTEAR OTRA VEZ</button>
-    </div>
+<div id="contador">3</div>
+
+<div id="win">
+  <div class="feliz">¡GANADOR!</div>
+  <div class="nombre" id="ganador">—</div>
+  <div class="cod" id="codigo"></div>
+  <div class="fila" style="margin-top:12px">
+    <button class="btn" onclick="otra()">SORTEAR OTRA VEZ</button>
   </div>
 </div>
 
+<canvas id="confeti"></canvas>
+
 <script>
-let lista = [];
+/* ---------------- audio ---------------- */
+let AC=null;
+function iniAudio(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } }
+function tick(f,dur,vol){
+  if(!AC) return;
+  const o=AC.createOscillator(), g=AC.createGain(), t=AC.currentTime;
+  o.type="square"; o.frequency.value=f;
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol||.12,t+.008);
+  g.gain.exponentialRampToValueAtTime(.0005,t+(dur||.09));
+  o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+(dur||.09)+.02);
+}
+function redoble(duracion){
+  if(!AC) return;
+  const n=Math.floor(AC.sampleRate*duracion), buf=AC.createBuffer(1,n,AC.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<n;i++){
+    const t=i/AC.sampleRate;
+    const p=Math.min(1,t/duracion);
+    const golpe=Math.pow(Math.abs(Math.sin(t*(18+p*90)*Math.PI)),14);
+    d[i]=(Math.random()*2-1)*golpe*(0.25+p*0.5);
+  }
+  const s=AC.createBufferSource(), g=AC.createGain(), f=AC.createBiquadFilter();
+  s.buffer=buf; f.type="bandpass"; f.frequency.value=1800; f.Q.value=0.8; g.gain.value=.9;
+  s.connect(f); f.connect(g); g.connect(AC.destination); s.start();
+}
+function aplausos(){
+  if(!AC) return;
+  const dur=2.4, n=Math.floor(AC.sampleRate*dur), buf=AC.createBuffer(1,n,AC.sampleRate), d=buf.getChannelData(0);
+  const env=new Float32Array(n);
+  for(let k=0;k<110;k++){
+    const s0=Math.floor(Math.pow(Math.random(),.75)*dur*.9*AC.sampleRate), len=Math.floor(.055*AC.sampleRate);
+    for(let i=0;i<len && s0+i<n;i++){ const v=Math.exp(-(i/AC.sampleRate)*75); if(v>env[s0+i]) env[s0+i]=v; }
+  }
+  for(let i=0;i<n;i++){
+    const t=i/AC.sampleRate;
+    d[i]=(Math.random()*2-1)*env[i]*.55*Math.min(1,t/.12)*Math.min(1,(dur-t)/.45);
+  }
+  const s=AC.createBufferSource(), g=AC.createGain(), f=AC.createBiquadFilter();
+  s.buffer=buf; f.type="bandpass"; f.frequency.value=2300; f.Q.value=.6; g.gain.value=1;
+  s.connect(f); f.connect(g); g.connect(AC.destination); s.start();
+}
+
+/* ---------------- participantes ---------------- */
+let gente=[], ganador=null, corriendo=false;
 
 function normalizar(txt){
-  const out = [];
-  // 1) formato del mensaje de WhatsApp
-  const re = /EVO-([A-Z0-9]{3,6})\b/g;
-  let m, vistos = new Set();
-  while((m = re.exec(txt)) !== null){
-    const c = "EVO-" + m[1].toUpperCase();
-    if(!vistos.has(c)){ vistos.add(c); out.push({codigo:c}); }
-  }
-  if(out.length) return out;
-  // 2) una por línea
-  txt.split(/\n/).forEach(l=>{
-    const s = l.trim();
-    if(s && !vistos.has(s)){ vistos.add(s); out.push({codigo:s}); }
+  const out=[], vistos=new Set();
+  txt.split(/\n/).forEach(linea=>{
+    const l=linea.trim();
+    if(!l) return;
+    const m=[...l.matchAll(/EVO[-‑]([A-Z0-9]{3,6})\b/gi)];
+    if(m.length){
+      m.forEach(x=>{
+        const code=("EVO-"+x[1]).toUpperCase();
+        if(vistos.has(code)) return;
+        vistos.add(code);
+        let nom=l.replace(/EVOBIKE.{0,90}?EVO[-‑][A-Z0-9]{3,6}\s*\(?/i,"").replace(/\)\s*$/,"").trim();
+        if(!nom || nom.toUpperCase().startsWith("EVOBIKE")) nom="";
+        out.push({code, nom:nom||code});
+      });
+    }else if(/^[A-Za-zÁÉÍÓÚÑáéíóúñ][A-Za-zÁÉÍÓÚÑáéíóúñ\s.'-]{2,40}$/.test(l)){
+      out.push({code:"", nom:l});
+    }
   });
   return out;
 }
 
-function pintar(){
-  document.getElementById("carga").classList.add("oculto");
-  document.getElementById("resultado").classList.add("oculto");
-  document.getElementById("panel").classList.remove("oculto");
-  document.getElementById("cont").textContent = lista.length;
-  document.getElementById("lista").innerHTML = lista.map(p=>p.codigo + (p.nom? " · "+p.nom : "")).join("<br>");
-  document.getElementById("btnSortear").disabled = lista.length === 0;
-}
-
-function cargarLista(){
-  const txt = document.getElementById("txt").value;
-  lista = normalizar(txt);
-  if(!lista.length){ alert("No encontré ningún código. Pegá el texto del chat o los códigos, uno por línea."); return; }
-  pintar();
-}
-
-function desdeLocal(){
-  try{
-    const s = JSON.parse(localStorage.getItem("evobike_cupco_v1")) || {};
-    if(!s.codigo){ alert("En este teléfono no hay ningún registro."); return; }
-    lista = [{codigo:s.codigo, nom:(s.nom||"")+" "+(s.ape||"")}];
-    pintar();
-  }catch(e){ alert("No se pudo leer."); }
-}
-
-function reiniciar(){
-  document.getElementById("panel").classList.add("oculto");
-  document.getElementById("resultado").classList.add("oculto");
-  document.getElementById("carga").classList.remove("oculto");
-}
-
-let timer = null;
-
-function sortear(){
-  document.getElementById("panel").classList.add("oculto");
-  document.getElementById("resultado").classList.remove("oculto");
-  const g = document.getElementById("ganador"), q = document.getElementById("quien");
-  let n = 0;
-  clearInterval(timer);
-  timer = setInterval(()=>{
-    const p = lista[Math.floor(Math.random()*lista.length)];
-    g.textContent = p.codigo;
-    q.textContent = p.nom || "";
-    n++;
-    if(n > 26){
-      clearInterval(timer);
-      const fin = lista[Math.floor(Math.random()*lista.length)];
-      g.textContent = fin.codigo;
-      q.textContent = (fin.nom || "") + "  ·  de " + lista.length + " participantes";
-    }
-  }, 90);
+function cargar(sinDatos){
+  iniAudio();
+  const t=document.getElementById("txt").value;
+  gente = normalizar(t);
+  if(!gente.length || sinDatos){
+    if(!sinDatos && !gente.length){ document.getElementById("msg").textContent="No encontré códigos EVO-XXXXX. Revisá el texto pegado."; return; }
+    gente = ["ANA","BELÉN","CARLOS","DANIELA","EMILIO","FLOR","GABI","HUGO","IRIS","JORGE",
+             "KARINA","LUIS","MARTA","NICO","OLGA","PABLO","QUIQUE","ROSA","SANTI","TITO"]
+           .map(n=>({code:"EVO-DEMO", nom:n}));
+  }
+  document.getElementById("cfg").style.display="none";
+  document.getElementById("sub").textContent = sinDatos ? "MODO DEMO" : gente.length+" PARTICIPANTES CARGADOS";
+  document.getElementById("ruleta").textContent="¿QUIÉN SE LA LLEVA?";
+  document.getElementById("ruleta").classList.add("chico");
 }
 
 function otra(){
-  document.getElementById("resultado").classList.add("oculto");
-  document.getElementById("panel").classList.remove("oculto");
+  document.getElementById("win").classList.remove("on");
+  document.getElementById("ruleta").classList.remove("chico");
+  document.getElementById("ruleta").textContent="¿QUIÉN SE LA LLEVA?";
+  document.getElementById("ruleta").classList.add("chico");
+  document.getElementById("sub").textContent="";
+  ganador=null; corriendo=false;
+  document.getElementById("go").style.display="";
 }
+
+/* ---------------- la secuencia con suspenso ---------------- */
+async function arrancar(){
+  if(corriendo || !gente.length) return;
+  iniAudio();
+  corriendo=true;
+  const go=document.getElementById("go"); go.style.display="none";
+  const rul=document.getElementById("ruleta"); rul.classList.remove("chico");
+  const cont=document.getElementById("contador");
+  const sub=document.getElementById("sub");
+
+  // 1) cuenta regresiva
+  sub.textContent="PREPARADOS...";
+  for(let i=3;i>=1;i--){
+    cont.textContent=i;
+    cont.style.opacity="1";
+    cont.style.transform="scale(1)";
+    cont.animate([{transform:"scale(1.9)",opacity:0},{transform:"scale(1)",opacity:1}],{duration:280,easing:"ease-out"});
+    tick(i===1?880:520,.12,.16);
+    await dormir(700);
+    cont.style.opacity="0";
+    await dormir(120);
+  }
+
+  // 2) ruleta que frena de a poco
+  redoble(6.2);
+  const total=6.2*1000;
+  let t=0;
+  const nombres=gente.map(g=>g.nom);
+  while(t<total){
+    const p=t/total;
+    const espera=45+Math.pow(p,3)*420;      // arranca rapidisimo y frena
+    rul.textContent=nombres[Math.floor(Math.random()*nombres.length)];
+    if(p>0.75) tick(300+Math.random()*200,.03,.05);
+    await dormir(espera);
+    t+=espera;
+  }
+
+  // 3) silencio de tension
+  sub.textContent="";
+  rul.textContent="";
+  await dormir(900);
+
+  // 4) GANADOR
+  ganador=gente[Math.floor(Math.random()*gente.length)];
+  document.getElementById("ganador").textContent=ganador.nom;
+  document.getElementById("codigo").textContent=ganador.code||"";
+  document.getElementById("win").classList.add("on");
+  aplausos();
+  tick(660,.14,.2); setTimeout(()=>tick(880,.14,.2),150); setTimeout(()=>tick(1320,.3,.2),300);
+  confeti();
+}
+
+const dormir=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ---------------- confeti ---------------- */
+function confeti(){
+  const cv=document.getElementById("confeti"), ctx=cv.getContext("2d");
+  cv.width=innerWidth; cv.height=innerHeight;
+  const cols=["#2FE26A","#FFD400","#7ee8ff","#ff5fbe","#fff"];
+  const ps=[];
+  for(let i=0;i<180;i++) ps.push({x:Math.random()*cv.width, y:-20-Math.random()*cv.height*0.5,
+    vx:(Math.random()-.5)*2.4, vy:2+Math.random()*4, r:3+Math.random()*6,
+    c:cols[Math.floor(Math.random()*cols.length)], a:Math.random()*6, va:(Math.random()-.5)*.3});
+  let fr=0;
+  (function loop(){
+    fr++;
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.a+=p.va;
+      if(p.y>cv.height+20){ p.y=-20; p.x=Math.random()*cv.width; p.vy=2+Math.random()*4; }
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.a);
+      ctx.fillStyle=p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*1.6);
+      ctx.restore();
+    });
+    if(fr<60*10) requestAnimationFrame(loop); else ctx.clearRect(0,0,cv.width,cv.height);
+  })();
+}
+
+/* atajos de teclado para el operador */
+addEventListener("keydown",e=>{
+  if(e.code==="Space"){ e.preventDefault(); if(!corriendo) arrancar(); }
+  if(e.key==="r"||e.key==="R") otra();
+});
 </script>
 </body>
 </html>
