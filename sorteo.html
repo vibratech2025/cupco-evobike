@@ -52,13 +52,17 @@
     text-align:center;padding:20px}
   #win.on{display:flex}
   #win .feliz{font-size:clamp(13px,3.4vw,20px);letter-spacing:.3em;color:var(--amar)}
-  #win .nombre{font-size:clamp(34px,11vw,96px);line-height:.95;letter-spacing:-3px;max-width:94vw;
+  #win .nombre{font-size:clamp(38px,13.5vw,140px);line-height:.95;letter-spacing:-3px;max-width:94vw;
     background:linear-gradient(180deg,#fff,#2FE26A 70%);-webkit-background-clip:text;
     background-clip:text;color:transparent;filter:drop-shadow(0 0 46px rgba(47,226,106,.85));
-    animation:entra .7s cubic-bezier(.2,.9,.2,1.4) both}
+    animation:entra .85s cubic-bezier(.2,.9,.2,1.4) both, respira 3s 1s ease-in-out infinite}
   #win .cod{font-family:ui-monospace,monospace;font-size:clamp(15px,4vw,28px);letter-spacing:.16em;
     color:var(--amar);animation:entra .7s .25s both}
-  @keyframes entra{0%{transform:scale(.4);opacity:0}100%{transform:none;opacity:1}}
+  @keyframes entra{0%{transform:scale(.35) rotate(-3deg);opacity:0;filter:blur(14px)}
+    55%{transform:scale(1.14) rotate(1deg);opacity:1;filter:blur(0)}
+    75%{transform:scale(.97)}100%{transform:none;opacity:1}}
+  @keyframes respira{0%,100%{filter:drop-shadow(0 0 46px rgba(47,226,106,.85))}
+    50%{filter:drop-shadow(0 0 80px rgba(47,226,106,1))}}
   #fondo{position:fixed;inset:0;z-index:0;pointer-events:none}
   #confeti{position:fixed;inset:0;pointer-events:none;z-index:11}
   #win .moto{width:min(46vw,300px);filter:drop-shadow(0 0 34px rgba(255,255,255,.75));
@@ -79,7 +83,7 @@
 </head>
 <body>
 
-<div id="cfg">
+<div id="cfg" style="display:none">
   <h2>CARGAR PARTICIPANTES</h2>
   <p>Pegá acá los mensajes de WhatsApp (con los códigos EVO-XXXXX).<br>
      También podés tocar <b>Abrir sin datos</b> para ver la animación.</p>
@@ -199,6 +203,37 @@ function aplausos(){
 }
 
 /* ---------------- participantes ---------------- */
+const FS = "https://firestore.googleapis.com/v1/projects/evobike-red-nacional/databases/(default)/documents/evobike_inscriptos?key=AIzaSyDBa7KeHsn4gNdfAJC5IA9h5hpqaVrJ4cE&pageSize=300";
+
+async function traerBase(){
+  const r = await fetch(FS + "&t=" + Date.now(), {cache:"no-store"});
+  const d = await r.json();
+  return (d.documents || []).map(x => ({
+    nombre: (((x.fields||{}).nombre)||{}).stringValue || "",
+    codigo: (((x.fields||{}).codigo)||{}).stringValue || "",
+    tel:    (((x.fields||{}).tel)||{}).stringValue || "",
+    ts:     Number((((x.fields||{}).ts)||{}).integerValue || 0)
+  })).filter(g => g.nombre).sort((a,b)=>a.ts-b.ts);
+}
+
+async function cargarAuto(){
+  const sub = document.getElementById("sub");
+  if(sub) sub.textContent = "CONECTANDO…";
+  try{
+    gente = await traerBase();
+    document.getElementById("cfg").style.display = "none";
+    if(!gente.length){
+      if(sub) sub.textContent = "TODAVÍA NO HAY INSCRIPTOS";
+      return;
+    }
+    if(sub) sub.textContent = gente.length + " PARTICIPANTES";
+    const rul=document.getElementById("ruleta");
+    if(rul && !corriendo){ rul.textContent="¿QUIÉN SE LA LLEVA?"; rul.classList.add("chico"); }
+  }catch(e){
+    document.getElementById("cfg").style.display = "flex";
+    if(sub) sub.textContent = "SIN CONEXIÓN · CARGÁ A MANO";
+  }
+}
 let gente=[], ganador=null, corriendo=false;
 
 function normalizar(txt){
@@ -278,7 +313,7 @@ function otra(){
   document.getElementById("ruleta").textContent="¿QUIÉN SE LA LLEVA?";
   document.getElementById("ruleta").classList.add("chico");
   document.getElementById("sub").textContent="";
-  ganador=null; corriendo=false;
+  ganador=null; corriendo=false; cargarAuto();
   document.getElementById("go").style.display="";
 }
 
@@ -359,6 +394,11 @@ function confeti(){
     if(fr<60*10) requestAnimationFrame(loop); else ctx.clearRect(0,0,cv.width,cv.height);
   })();
 }
+
+/* arranca trayendo la lista sola */
+iniAudio();
+cargarAuto();
+setInterval(()=>{ if(!corriendo && !ganador) cargarAuto(); }, 20000);
 
 /* atajos de teclado para el operador */
 addEventListener("keydown",e=>{
