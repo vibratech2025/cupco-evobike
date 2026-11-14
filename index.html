@@ -1215,7 +1215,7 @@ function pantallaTicket(){
   const s=S();
   if(!s.codigo) return pantallaRegistro();
   velObjetivo=34; gateT=0; biciId="urbex";
-  const texto=`EVOBIKE · ${CFG.evento}\nNombre: ${s.nom} ${s.ape}\nMi número para el sorteo: ${s.codigo}\nSorteo: hoy ${CFG.horaSorteo}`;
+  const texto=`EVOBIKE · ${CFG.evento}\nNombre: ${s.nom} ${s.ape}\nWhatsApp: ${s.wa}\nMi número para el sorteo: ${s.codigo}\nSorteo: hoy ${CFG.horaSorteo}`;
   ui(`<div class="card ticket">
       <div class="kicker">Estás anotado</div>
       <div class="cod">${esc(s.codigo)}</div>

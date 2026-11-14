@@ -54,6 +54,12 @@
     color:var(--amar);animation:entra .7s .25s both}
   @keyframes entra{0%{transform:scale(.4);opacity:0}100%{transform:none;opacity:1}}
   #confeti{position:fixed;inset:0;pointer-events:none;z-index:11}
+  #tabla{width:min(94vw,760px);max-height:46vh;overflow:auto;margin-top:10px}
+  #tabla table{width:100%;border-collapse:collapse;font-family:system-ui,Arial;font-size:12px}
+  #tabla th{position:sticky;top:0;background:#150a2e;color:#2FE26A;text-align:left;padding:7px 8px;
+    font-size:11px;letter-spacing:.08em}
+  #tabla td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:#dfe9f5}
+  #tabla tr:nth-child(even) td{background:rgba(255,255,255,.03)}
   .fila{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 </style>
 </head>
@@ -79,6 +85,7 @@ EVOBIKE · Mi número ... EVO-9B2LP (Maria Gomez)"></textarea>
   <div class="cab">EVOBIKE · SORTEO SOL PRO</div>
   <div id="ruleta" class="chico">—</div>
   <div id="sub"></div>
+  <div id="tabla"></div>
   <button class="btn" id="go" onclick="arrancar()">SORTEAR</button>
   <button class="btn ghost" onclick="otra()">OTRA VEZ</button>
 </div>
@@ -143,24 +150,44 @@ let gente=[], ganador=null, corriendo=false;
 
 function normalizar(txt){
   const out=[], vistos=new Set();
-  txt.split(/\n/).forEach(linea=>{
-    const l=linea.trim();
-    if(!l) return;
-    const m=[...l.matchAll(/EVO[-‑]([A-Z0-9]{3,6})\b/gi)];
-    if(m.length){
-      m.forEach(x=>{
-        const code=("EVO-"+x[1]).toUpperCase();
-        if(vistos.has(code)) return;
-        vistos.add(code);
-        let nom=l.replace(/EVOBIKE.{0,90}?EVO[-‑][A-Z0-9]{3,6}\s*\(?/i,"").replace(/\)\s*$/,"").trim();
-        if(!nom || nom.toUpperCase().startsWith("EVOBIKE")) nom="";
-        out.push({code, nom:nom||code});
-      });
-    }else if(/^[A-Za-zÁÉÍÓÚÑáéíóúñ][A-Za-zÁÉÍÓÚÑáéíóúñ\s.'-]{2,40}$/.test(l)){
-      out.push({code:"", nom:l});
+  // junto todo el texto y busco bloques por codigo (sirve pegado de WhatsApp con varias lineas)
+  const plano = txt.replace(/\r/g,'');
+  const re = /EVO[-‑]([A-Z0-9]{3,6})\b/gi;
+  let m;
+  while((m = re.exec(plano))){
+    const code = ("EVO-"+m[1]).toUpperCase();
+    if(vistos.has(code)) continue;
+    vistos.add(code);
+    // miro hacia atras 400 caracteres para encontrar nombre y telefono
+    const desde = Math.max(0, m.index-400);
+    const bloque = plano.slice(desde, m.index);
+    let nom = "", tel = "";
+    const mns = [...bloque.matchAll(/Nombre:\s*([^\n]+)/gi)];
+    if(mns.length) nom = mns[mns.length-1][1].replace(/[·|]/g,' ').trim();
+    const mts = [...bloque.matchAll(/WhatsApp:\s*([^\n]+)/gi)];
+    if(mts.length) tel = mts[mts.length-1][1].replace(/[^0-9+]/g,'');
+    if(!tel){
+      const mds = [...bloque.matchAll(/(\+?54[\d\s-]{8,14})/g)];
+      if(mds.length) tel = mds[mds.length-1][1].replace(/[^0-9+]/g,'');
     }
-  });
+    if(!nom){
+      const prev = bloque.split(/\n/).map(x=>x.trim()).filter(Boolean);
+      const cand = prev.reverse().find(x=>/^[A-Za-zÁÉÍÓÚÑáéíóúñ][A-Za-zÁÉÍÓÚÑáéíóúñ\s.'-]{2,40}$/.test(x));
+      if(cand) nom = cand;
+    }
+    out.push({code, nom:nom||code, tel});
+  }
   return out;
+}
+
+function csv(){
+  const cab='Nombre,Codigo,WhatsApp\n';
+  const filas=gente.map(g=>'"'+g.nom.replace(/"/g,'""')+'","'+g.code+'","'+g.tel+'"').join('\n');
+  const blob=new Blob([cab+filas],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='inscriptos-evobike-cupco.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
 function cargar(sinDatos){
@@ -177,7 +204,20 @@ function cargar(sinDatos){
   document.getElementById("sub").textContent = sinDatos ? "MODO DEMO" : gente.length+" PARTICIPANTES CARGADOS";
   document.getElementById("ruleta").textContent="¿QUIÉN SE LA LLEVA?";
   document.getElementById("ruleta").classList.add("chico");
+  tabla();
 }
+
+function tabla(){
+  let t=document.getElementById("tabla");
+  if(!t) return;
+  if(!gente.length){ t.innerHTML=""; return; }
+  let h='<table><thead><tr><th>#</th><th>Nombre</th><th>Código</th><th>WhatsApp</th></tr></thead><tbody>';
+  gente.forEach((g,i)=>{ h+='<tr><td>'+(i+1)+'</td><td>'+esc(g.nom)+'</td><td>'+esc(g.code)+'</td><td>'+(g.tel||'—')+'</td></tr>'; });
+  h+='</tbody></table>';
+  h+='<button class="btn ghost" style="margin-top:10px" onclick="csv()">DESCARGAR EXCEL (CSV)</button>';
+  t.innerHTML=h;
+}
+function esc(x){ return String(x).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
 function otra(){
   document.getElementById("win").classList.remove("on");
