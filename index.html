@@ -1233,8 +1233,8 @@ function pantallaTicket(){
       <div class="sub">${esc(s.nom)} ${esc(s.ape)}</div>
       <div class="dato"><b>Con este código participás del sorteo de una EVOBIKE SOL PRO, hoy ${CFG.horaSorteo}.</b><br>
         Es personal e intransferible y tenés que estar presente con él.</div>
-      <div class="pista">Se abre tu código en PDF. Guardalo o sacale una captura.</div>
-      <div class="btns"><button class="big" id="desc" onclick="descargarPDF()">VER MI CÓDIGO EN PDF</button></div>
+      <div class="pista">Bajá el PDF y guardalo en el teléfono.</div>
+      <div class="btns"><button class="big" id="desc" onclick="descargarPDF()">DESCARGAR MI CÓDIGO</button></div>
       <div class="pista" style="margin-top:10px">Guardá el PDF en tu teléfono: es lo único que necesitás para el sorteo.</div>
       <button class="ghost" style="margin-top:8px;font-size:12px;opacity:.75" onclick="empezarDeCero()">↺ NO SOY YO · EMPEZAR DE NUEVO</button>
     </div>`);
@@ -1355,20 +1355,37 @@ function descargarPDF(){
   try{
     const s=S();
     const pdf=generarPDF(s);
-    const blob=new Blob([pdf],{type:"application/pdf"});
+    // octet-stream = el navegador lo DESCARGA (con application/pdf lo abre en el visor)
+    const blob=new Blob([pdf],{type:"application/octet-stream"});
+    const nombre="EVOBIKE-"+(s.codigo||"codigo")+".pdf";
+
+    // 1) intento clasico
     const url=URL.createObjectURL(blob);
-    // ABRE el PDF en el visor del telefono (no lo fuerza a descargar)
-    const w=window.open(url,"_blank");
-    if(!w){
-      // si el navegador bloqueo la ventana, lo abro en la misma
-      location.href=url;
-    }
+    const a=document.createElement("a");
+    a.href=url; a.download=nombre; a.rel="noopener"; a.style.display="none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ try{ document.body.removeChild(a); }catch(e){} }, 1500);
+
+    // 2) refuerzo por si el navegador lo ignora
+    setTimeout(()=>{
+      if(!document.hidden){
+        try{
+          const a2=document.createElement("a");
+          a2.href=url; a2.download=nombre;
+          a2.target="_self";
+          document.body.appendChild(a2); a2.click();
+          setTimeout(()=>{ try{ document.body.removeChild(a2); }catch(e){} }, 1200);
+        }catch(e){}
+      }
+    }, 500);
+
+    setTimeout(()=>URL.revokeObjectURL(url), 60000);
     sonidoMoneda();
     const b=document.getElementById("desc");
-    if(b){ const t=b.textContent; b.textContent="ABRIENDO TU PDF…"; setTimeout(()=>b.textContent=t,2200); }
-    setTimeout(()=>URL.revokeObjectURL(url), 120000);
+    if(b){ const t=b.textContent; b.textContent="DESCARGANDO…"; setTimeout(()=>b.textContent=t,2500); }
   }catch(e){
-    alert("No se pudo abrir el PDF. Sacale una captura a tu código.");
+    alert("No se pudo generar el PDF. Sacale una captura a tu código.");
   }
 }
 function descargarCodigo(){
