@@ -1233,8 +1233,8 @@ function pantallaTicket(){
       <div class="sub">${esc(s.nom)} ${esc(s.ape)}</div>
       <div class="dato"><b>Con este código participás del sorteo de una EVOBIKE SOL PRO, hoy ${CFG.horaSorteo}.</b><br>
         Es personal e intransferible y tenés que estar presente con él.</div>
-      <div class="pista">Descargá tu código en PDF y guardalo: no lo perdés aunque cierres la página.</div>
-      <div class="btns"><button class="big" id="desc" onclick="descargarPDF()">DESCARGAR MI CÓDIGO EN PDF</button></div>
+      <div class="pista">Se abre tu código en PDF. Guardalo o sacale una captura.</div>
+      <div class="btns"><button class="big" id="desc" onclick="descargarPDF()">VER MI CÓDIGO EN PDF</button></div>
       <div class="pista" style="margin-top:10px">Guardá el PDF en tu teléfono: es lo único que necesitás para el sorteo.</div>
       <button class="ghost" style="margin-top:8px;font-size:12px;opacity:.75" onclick="empezarDeCero()">↺ NO SOY YO · EMPEZAR DE NUEVO</button>
     </div>`);
@@ -1356,17 +1356,21 @@ function descargarPDF(){
     const s=S();
     const pdf=generarPDF(s);
     const blob=new Blob([pdf],{type:"application/pdf"});
-    const a=document.createElement("a");
-    a.download="EVOBIKE-"+(s.codigo||"codigo")+".pdf";
-    a.href=URL.createObjectURL(blob);
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    const url=URL.createObjectURL(blob);
+    // ABRE el PDF en el visor del telefono (no lo fuerza a descargar)
+    const w=window.open(url,"_blank");
+    if(!w){
+      // si el navegador bloqueo la ventana, lo abro en la misma
+      location.href=url;
+    }
     sonidoMoneda();
     const b=document.getElementById("desc");
-    if(b){ const t=b.textContent; b.textContent="¡DESCARGADO!"; setTimeout(()=>b.textContent=t,1900); }
-  }catch(e){ alert("No se pudo generar el PDF. Sacale una captura a tu código."); }
+    if(b){ const t=b.textContent; b.textContent="ABRIENDO TU PDF…"; setTimeout(()=>b.textContent=t,2200); }
+    setTimeout(()=>URL.revokeObjectURL(url), 120000);
+  }catch(e){
+    alert("No se pudo abrir el PDF. Sacale una captura a tu código.");
+  }
 }
-
 function descargarCodigo(){
   const s=S();
   const c=document.createElement("canvas"); c.width=900; c.height=1200;
