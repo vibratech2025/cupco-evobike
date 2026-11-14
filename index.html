@@ -1224,8 +1224,8 @@ function pantallaTicket(){
         Es personal e intransferible y tenés que estar presente con él.</div>
       <div class="pista">Mandátelo por WhatsApp: te queda guardado y no lo perdés aunque cierres la página.</div>
       <div class="btns"><a class="big" style="text-decoration:none;color:#04120a"
-        href="https://wa.me/${telWa(s.wa)}?text=${encodeURIComponent(texto)}" target="_blank" rel="noopener">
-        ENVIARME EL CÓDIGO POR WHATSAPP</a></div>
+        href="https://wa.me/${HAY_WA?CFG.WA_EVOBIKE:telWa(s.wa)}?text=${encodeURIComponent(texto)}" target="_blank" rel="noopener">
+        ${HAY_WA?"MANDAR MI CÓDIGO A EVOBIKE":"ENVIARME EL CÓDIGO POR WHATSAPP"}</a></div>
       <button class="ghost" style="margin-top:8px;font-size:12px" id="copiar" onclick="copiarCodigo()">COPIAR MI NÚMERO</button>
       <button class="ghost" style="margin-top:8px;font-size:12px;opacity:.75" onclick="empezarDeCero()">↺ NO SOY YO · EMPEZAR DE NUEVO</button>
     </div>`);
