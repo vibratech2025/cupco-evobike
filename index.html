@@ -1465,6 +1465,15 @@ function copiarCodigo(){
     document.body.removeChild(t);
   }
 }
+function compartirWeb(){
+  const url="https://vibratech2025.github.io/cupco-evobike/";
+  const texto="Jugá a EVOBIKE y participá por una SOL PRO 🏍️";
+  if(navigator.share){
+    navigator.share({title:"EVOBIKE · CupCo Fest", text:texto, url:url}).catch(()=>{});
+  } else {
+    window.open("https://wa.me/?text="+encodeURIComponent(texto+" "+url), "_blank");
+  }
+}
 function empezarDeCero(){
   localStorage.removeItem(KEY);
   location.replace(location.pathname);
