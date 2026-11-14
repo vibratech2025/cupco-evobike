@@ -317,6 +317,7 @@
    ===================================================================== */
 const CFG = { WA_EVOBIKE:"5496474983077", horaSorteo:"20:30", evento:"CupCo Fest" };
 // Poné acá el WhatsApp real de EVOBIKE (con 549...) y vuelve el botón de WhatsApp.
+const API_INSCRITOS = "https://firestore.googleapis.com/v1/projects/evobike-red-nacional/databases/(default)/documents/evobike_inscriptos?key=AIzaSyDBa7KeHsn4gNdfAJC5IA9h5hpqaVrJ4cE";
 const HAY_WA = CFG.WA_EVOBIKE.replace(/\D/g,"").length >= 10;
 const KEY = "evobike_cupco_v3";
 
@@ -1201,6 +1202,18 @@ function enviarRegistro(){
   if(!s.n1||!s.n2) return pantallaOrden(nivelPend());
   if(!s.codigo) s.codigo=codigo();
   s.nom=nom; s.ape=ape; s.wa=wa; s.n3=s.n3||Date.now();
+  // guarda en la base online (Firestore), publica
+  if(API_INSCRITOS){
+    try{
+      fetch(API_INSCRITOS,{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({fields:{
+          codigo:{stringValue:String(s.codigo||"")},
+          nombre:{stringValue:(nom+" "+ape).trim()},
+          tel:{stringValue:String(wa||"")},
+          ts:{integerValue:String(Math.floor(Date.now()/1000))}
+        }})}).catch(()=>{});
+    }catch(e){}
+  }
   save(s);
   beep([700,900,1200,1600],.14,"triangle",.13);
   for(let i=0;i<60;i++) confeti.push({x:W/2+(Math.random()-.5)*170, y:H*0.3,

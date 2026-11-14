@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>INSCRIPTOS · EVOBIKE CupCo Fest</title>
+<style>
+:root{--verde:#2FE26A;--fondo:#05070A}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:radial-gradient(circle at 50% 0%,#1a0a37,#0a0618 55%,#05070A);
+  color:#fff;font-family:"Arial Black",Arial,sans-serif;min-height:100vh;padding:18px}
+h1{font-size:clamp(17px,4.4vw,26px);letter-spacing:-1px;color:var(--verde)}
+.n{font-family:system-ui,Arial;font-size:13px;color:#8fa4bb;margin:6px 0 14px}
+.n b{color:#fff;font-size:16px}
+table{border-collapse:collapse;width:100%;font-family:system-ui,Arial;font-size:13.5px}
+thead th{position:sticky;top:0;background:#150a2e;color:var(--verde);text-align:left;
+  padding:9px 8px;font-size:10.5px;letter-spacing:.1em}
+td{padding:8px;border-bottom:1px solid rgba(255,255,255,.08)}
+tr:nth-child(even) td{background:rgba(255,255,255,.03)}
+.barra{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+a.btn,button{font-family:"Arial Black",sans-serif;border:0;border-radius:12px;cursor:pointer;
+  background:linear-gradient(180deg,#5cff95,#2FE26A 60%,#12c452);color:#04120a;
+  padding:12px 20px;font-size:14px;text-decoration:none;display:inline-block}
+button.g{background:transparent;color:#8fb0c4;border:1px solid #2a2140;font-family:system-ui;
+  font-weight:600;font-size:12px;padding:11px 16px}
+.vacio{font-family:system-ui;color:#8fa4bb;padding:26px 0;text-align:center}
+</style>
+</head>
+<body>
+<h1>INSCRIPTOS · EVOBIKE CUPCO FEST</h1>
+<div class="n" id="n">cargando…</div>
+<div class="barra">
+  <a class="btn" id="dl" download="inscriptos-evobike-cupco.csv">DESCARGAR EXCEL (CSV)</a>
+  <button class="g" onclick="traer()">ACTUALIZAR</button>
+</div>
+<table>
+  <thead><tr><th>#</th><th>NOMBRE</th><th>CÓDIGO</th><th>WHATSAPP</th></tr></thead>
+  <tbody id="tb"></tbody>
+</table>
+<div class="vacio" id="vacio" style="display:none">Todavía no se anotó nadie.</div>
+
+<script>
+const URL_DB = "https://firestore.googleapis.com/v1/projects/evobike-red-nacional/databases/(default)/documents/evobike_inscriptos?key=AIzaSyDBa7KeHsn4gNdfAJC5IA9h5hpqaVrJ4cE&pageSize=300";
+
+function val(f, k){
+  const x = f[k];
+  if(!x) return "";
+  return x.stringValue ?? x.integerValue ?? x.doubleValue ?? "";
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+let gente = [];
+
+async function traer(){
+  try{
+    const r = await fetch(URL_DB + "&t=" + Date.now());
+    const d = await r.json();
+    gente = (d.documents || []).map(doc => ({
+      nombre: val(doc.fields,"nombre"),
+      codigo: val(doc.fields,"codigo"),
+      tel:    val(doc.fields,"tel"),
+      ts:     Number(val(doc.fields,"ts") || 0)
+    })).sort((a,b)=>a.ts-b.ts);
+
+    document.getElementById("n").innerHTML =
+      "<b>" + gente.length + "</b> inscriptos" +
+      (gente.length ? " · último: " + esc(gente[gente.length-1].nombre) : "");
+
+    const tb = document.getElementById("tb");
+    tb.innerHTML = gente.map((g,i)=>
+      "<tr><td>"+(i+1)+"</td><td>"+esc(g.nombre)+"</td><td>"+esc(g.codigo)+"</td><td>"+esc(g.tel||"—")+"</td></tr>"
+    ).join("");
+    document.getElementById("vacio").style.display = gente.length ? "none" : "block";
+
+    const csv = "Nombre,Codigo,WhatsApp\n" +
+      gente.map(g=>'"'+String(g.nombre).replace(/"/g,'""')+'","'+g.codigo+'","'+g.tel+'"').join("\n");
+    document.getElementById("dl").href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  }catch(e){
+    document.getElementById("n").textContent = "sin conexión, reintentando…";
+  }
+}
+traer();
+setInterval(traer, 5000);
+</script>
+</body>
+</html>
