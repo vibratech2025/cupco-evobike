@@ -246,7 +246,7 @@ async function cargarAuto(){
       if(sub) sub.textContent = "TODAVÍA NO HAY INSCRIPTOS";
       return;
     }
-    if(sub) sub.textContent = gente.length + " PARTICIPANTES";
+    if(sub) sub.textContent = gente.length + " PARTICIPANTES" + (yaGanaron.length? " · "+yaGanaron.length+" ya sorteados":"");
     const rul=document.getElementById("ruleta");
     if(rul && !corriendo){ rul.textContent="¿QUIÉN SE LA LLEVA?"; rul.classList.add("chico"); }
   }catch(e){
@@ -257,6 +257,7 @@ async function cargarAuto(){
 let gente=[], ganador=null, corriendo=false;
 const QS = new URLSearchParams(location.search);
 const FORZADO = QS.get("gana");      // mostrar/demo: siempre gana esta persona
+let yaGanaron = [];                 // para poder sortear varias veces sin repetir
 
 function normalizar(txt){
   const out=[], vistos=new Set();
@@ -386,7 +387,10 @@ async function arrancar(){
     const f = gente.find(g => (g.nombre||"").toLowerCase().includes(FORZADO.toLowerCase()));
     ganador = f || {nombre:FORZADO, codigo:""};
   } else {
-    ganador = gente[Math.floor(Math.random()*gente.length)];
+    const libres = gente.filter(g => !yaGanaron.includes(g.nombre));
+    const pool = libres.length ? libres : gente;
+    ganador = pool[Math.floor(Math.random()*pool.length)];
+    if(!yaGanaron.includes(ganador.nombre)) yaGanaron.push(ganador.nombre);
   }
   document.getElementById("ganador").textContent=ganador.nombre || ganador.nom || "";
   document.getElementById("codigo").textContent=ganador.codigo || ganador.code || "";
