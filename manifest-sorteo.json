@@ -1,0 +1,24 @@
+{
+ "name": "EVOBIKE Sorteo",
+ "short_name": "Sorteo",
+ "start_url": "sorteo.html",
+ "scope": "sorteo.html/",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#05070A",
+ "theme_color": "#05070A",
+ "icons": [
+  {
+   "src": "img/icono-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "img/icono-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any maskable"
+  }
+ ]
+}
