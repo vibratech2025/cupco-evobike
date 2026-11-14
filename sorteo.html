@@ -368,8 +368,8 @@ async function arrancar(){
   } else {
     ganador = gente[Math.floor(Math.random()*gente.length)];
   }
-  document.getElementById("ganador").textContent=ganador.nom;
-  document.getElementById("codigo").textContent=ganador.code||"";
+  document.getElementById("ganador").textContent=ganador.nombre || ganador.nom || "";
+  document.getElementById("codigo").textContent=ganador.codigo || ganador.code || "";
   document.getElementById("win").classList.add("on");
   aplausos();
   tick(660,.14,.2); setTimeout(()=>tick(880,.14,.2),150); setTimeout(()=>tick(1320,.3,.2),300);
