@@ -233,7 +233,10 @@ async function traerBase(){
     codigo: (((x.fields||{}).codigo)||{}).stringValue || "",
     tel:    (((x.fields||{}).tel)||{}).stringValue || "",
     ts:     Number((((x.fields||{}).ts)||{}).integerValue || 0)
-  })).filter(g => g.nombre).sort((a,b)=>a.ts-b.ts);
+  })).filter(g => g.nombre).filter(g => {
+    const n = g.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z ]/g,"");
+    return !EXCLUIDOS.some(x => n.includes(x));
+  }).sort((a,b)=>a.ts-b.ts);
 }
 
 async function cargarAuto(){
@@ -257,6 +260,9 @@ async function cargarAuto(){
 let gente=[], ganador=null, corriendo=false;
 const QS = new URLSearchParams(location.search);
 const FORZADO = QS.get("gana");      // mostrar/demo: siempre gana esta persona
+
+// nombres que NO pueden salir sorteados (se comparan sin tildes ni mayusculas)
+const EXCLUIDOS = ["apezteg","fabiana apez"];
 let yaGanaron = [];                 // para poder sortear varias veces sin repetir
 
 function normalizar(txt){
