@@ -151,7 +151,7 @@
   a.big{display:block;text-align:center;text-decoration:none}
 
   /* ---------- PRESENTACION DE LA MOTO ---------- */
-  #presenta{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+  #presenta{position:absolute;inset:0;z-index:10;pointer-events:none;display:flex;flex-direction:column;align-items:center;
             justify-content:center;gap:16px;padding:28px;opacity:0;pointer-events:none;
             background:radial-gradient(circle at 50% 45%,rgba(22,7,52,.97),rgba(4,1,12,.99));
             transition:opacity .3s}
@@ -171,7 +171,7 @@
         letter-spacing:.06em;text-align:center}
 
   /* ---------- LOGO BOOM ---------- */
-  #boom{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;
+  #boom{position:absolute;inset:0;z-index:9;pointer-events:none;display:flex;align-items:center;justify-content:center;
         pointer-events:none;opacity:0}
   #boom.on{animation:boomIn 1.25s cubic-bezier(.2,.9,.2,1) forwards}
   #boom .blogo{position:relative;width:min(76vw,540px);height:auto;
@@ -983,7 +983,8 @@ function garage(nueva){
   }).join("");
   document.getElementById("cont").innerHTML = libres.length+"<span>/7</span>";
 }
-function ui(html){ panel.innerHTML=html; garage(); requestAnimationFrame(()=>{ PH=panel.offsetHeight; }); }
+function ui(html){
+  const _i=document.getElementById("intro"); if(_i){ _i.remove(); } panel.innerHTML=html; garage(); requestAnimationFrame(()=>{ PH=panel.offsetHeight; }); }
 function gritar(txt){
   grito.querySelector("span").textContent=txt;
   grito.classList.remove("on"); void grito.offsetWidth; grito.classList.add("on");
@@ -1169,7 +1170,6 @@ function pantallaRegistro(){
       <label>Nombre</label><input id="f_nom" autocomplete="given-name" placeholder="Juan">
       <label>Apellido</label><input id="f_ape" autocomplete="family-name" placeholder="Pérez">
       <label>WhatsApp</label><input id="f_wa" type="tel" inputmode="tel" placeholder="3624 123456">
-      <div class="chk"><input type="checkbox" id="f_ok"><span>Autorizo a EVOBIKE a contactarme por mi número de participante. Tengo 16 años o más.</span></div>
       <div id="msg"></div>
       <div class="btns"><button class="big" onclick="enviarRegistro()">OBTENER MI NÚMERO</button></div>
     </div>`);
@@ -1191,13 +1191,11 @@ function enviarRegistro(){
   const nom=document.getElementById("f_nom").value.trim();
   const ape=document.getElementById("f_ape").value.trim();
   const wa=normalizaWa(document.getElementById("f_wa").value);
-  const ok=document.getElementById("f_ok").checked;
   const msg=document.getElementById("msg");
   const err=t=>{ msg.innerHTML=`<div class="err">${t}</div>`; };
   if(nom.length<2) return err("Poné tu nombre.");
   if(ape.length<2) return err("Poné tu apellido.");
   if(wa.length<8||wa.length>11) return err("Ese WhatsApp no parece completo. Poné el número con código de área.");
-  if(!ok) return err("Marcá la casilla para poder anotarte.");
   const s=S();
   if(!s.n1||!s.n2) return pantallaOrden(nivelPend());
   if(!s.codigo) s.codigo=codigo();
