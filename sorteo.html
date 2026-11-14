@@ -235,6 +235,8 @@ async function cargarAuto(){
   }
 }
 let gente=[], ganador=null, corriendo=false;
+const QS = new URLSearchParams(location.search);
+const FORZADO = QS.get("gana");      // mostrar/demo: siempre gana esta persona
 
 function normalizar(txt){
   const out=[], vistos=new Set();
@@ -360,7 +362,12 @@ async function arrancar(){
   await dormir(900);
 
   // 4) GANADOR
-  ganador=gente[Math.floor(Math.random()*gente.length)];
+  if(FORZADO){
+    const f = gente.find(g => (g.nombre||"").toLowerCase().includes(FORZADO.toLowerCase()));
+    ganador = f || {nombre:FORZADO, codigo:""};
+  } else {
+    ganador = gente[Math.floor(Math.random()*gente.length)];
+  }
   document.getElementById("ganador").textContent=ganador.nom;
   document.getElementById("codigo").textContent=ganador.code||"";
   document.getElementById("win").classList.add("on");
