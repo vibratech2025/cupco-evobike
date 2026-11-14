@@ -367,7 +367,7 @@ async function arrancar(){
   redoble(23);
   const total=23*1000;
   let t=0;
-  const nombres=gente.map(g=>g.nom);
+  const nombres=gente.map(g=>g.nombre || g.nom).filter(Boolean);
   while(t<total){
     const p=t/total;
     const espera=45+Math.pow(p,3)*420;      // arranca rapidisimo y frena
