@@ -1225,7 +1225,8 @@ function pantallaTicket(){
       <div class="pista">Mandátelo por WhatsApp: te queda guardado y no lo perdés aunque cierres la página.</div>
       <div class="btns"><a class="big" style="text-decoration:none;color:#04120a"
         href="https://wa.me/${HAY_WA?CFG.WA_EVOBIKE:telWa(s.wa)}?text=${encodeURIComponent(texto)}" target="_blank" rel="noopener">
-        ${HAY_WA?"MANDAR MI CÓDIGO A EVOBIKE":"ENVIARME EL CÓDIGO POR WHATSAPP"}</a></div>
+        ${HAY_WA?"ABRIR WHATSAPP Y MANDAR":"ENVIAR POR WHATSAPP"}</a></div>
+      <button class="ghost" style="margin-top:8px;font-size:12.5px" id="desc" onclick="descargarCodigo()">DESCARGAR MI CÓDIGO</button>
       <button class="ghost" style="margin-top:8px;font-size:12px" id="copiar" onclick="copiarCodigo()">COPIAR MI NÚMERO</button>
       <button class="ghost" style="margin-top:8px;font-size:12px;opacity:.75" onclick="empezarDeCero()">↺ NO SOY YO · EMPEZAR DE NUEVO</button>
     </div>`);
@@ -1271,6 +1272,37 @@ function irA(){
   }
 }
 
+function descargarCodigo(){
+  const s=S();
+  const c=document.createElement("canvas"); c.width=900; c.height=1200;
+  const g=c.getContext("2d");
+  g.fillStyle="#05070A"; g.fillRect(0,0,900,1200);
+  g.strokeStyle="#2FE26A"; g.lineWidth=7; g.strokeRect(26,26,848,1148);
+  g.textAlign="center";
+  g.fillStyle="#2FE26A"; g.font="bold 31px Arial";
+  g.fillText("EVOBIKE · CUPCO FEST 2026", 450, 135);
+  g.fillStyle="#ffffff"; g.font="bold 44px Arial";
+  g.fillText("MI NÚMERO PARA EL SORTEO", 450, 215);
+  g.fillStyle="#FFD400"; g.font="bold 108px monospace";
+  g.fillText(s.codigo, 450, 410);
+  g.fillStyle="#ffffff"; g.font="bold 46px Arial";
+  g.fillText(((s.nom||"")+" "+(s.ape||"")).trim().toUpperCase(), 450, 510);
+  g.fillStyle="#9fb0c6"; g.font="27px Arial";
+  g.fillText("Sorteo de una EVOBIKE SOL PRO", 450, 585);
+  g.fillText("CupCo Fest · La Unidad · hoy "+CFG.horaSorteo, 450, 625);
+  g.fillStyle="#2FE26A"; g.font="bold 32px Arial";
+  g.fillText("PRESENTÁ ESTE CÓDIGO EN LA CARPA", 450, 725);
+  g.fillStyle="#6b7d90"; g.font="24px Arial";
+  g.fillText("Personal e intransferible", 450, 775);
+  try{
+    const a=document.createElement("a");
+    a.download="EVOBIKE-"+s.codigo+".png";
+    a.href=c.toDataURL("image/png");
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    const b=document.getElementById("desc"); if(b){ b.textContent="¡DESCARGADO!"; setTimeout(()=>b.textContent="DESCARGAR MI CÓDIGO",1900); }
+    sonidoMoneda();
+  }catch(e){ alert("No se pudo descargar. Sacale una captura de pantalla."); }
+}
 function copiarCodigo(){
   const s=S();
   const txt = "EVOBIKE · Mi número para el sorteo de la SOL PRO es "+s.codigo+
