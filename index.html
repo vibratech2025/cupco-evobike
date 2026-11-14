@@ -1233,12 +1233,9 @@ function pantallaTicket(){
       <div class="sub">${esc(s.nom)} ${esc(s.ape)}</div>
       <div class="dato"><b>Con este código participás del sorteo de una EVOBIKE SOL PRO, hoy ${CFG.horaSorteo}.</b><br>
         Es personal e intransferible y tenés que estar presente con él.</div>
-      <div class="pista">Mandátelo por WhatsApp: te queda guardado y no lo perdés aunque cierres la página.</div>
-      <div class="btns"><a class="big" style="text-decoration:none;color:#04120a"
-        href="https://wa.me/${HAY_WA?CFG.WA_EVOBIKE:telWa(s.wa)}?text=${encodeURIComponent(texto)}" target="_blank" rel="noopener">
-        ${HAY_WA?"ABRIR WHATSAPP Y MANDAR":"ENVIAR POR WHATSAPP"}</a></div>
-      <button class="ghost" style="margin-top:8px;font-size:12.5px" id="desc" onclick="descargarCodigo()">DESCARGAR MI CÓDIGO</button>
-      <button class="ghost" style="margin-top:8px;font-size:12px" id="copiar" onclick="copiarCodigo()">COPIAR MI NÚMERO</button>
+      <div class="pista">Descargá tu código en PDF y guardalo: no lo perdés aunque cierres la página.</div>
+      <div class="btns"><button class="big" id="desc" onclick="descargarPDF()">DESCARGAR MI CÓDIGO EN PDF</button></div>
+      <div class="pista" style="margin-top:10px">Guardá el PDF en tu teléfono: es lo único que necesitás para el sorteo.</div>
       <button class="ghost" style="margin-top:8px;font-size:12px;opacity:.75" onclick="empezarDeCero()">↺ NO SOY YO · EMPEZAR DE NUEVO</button>
     </div>`);
 }
@@ -1281,6 +1278,93 @@ function irA(){
   } else {
     pantallaInicio();
   }
+}
+
+
+/* ---------- PDF del codigo (generado a mano, sin librerias) ---------- */
+/* ancho real de cada caracter en Helvetica / Helvetica-Bold (unidades de 1000) */
+const _ANCHOS = {
+  normal:{A:667,B:667,C:722,D:722,E:667,F:611,G:778,H:722,I:278,J:500,K:667,L:556,M:833,N:722,
+          O:778,P:667,Q:778,R:722,S:667,T:611,U:722,V:667,W:944,X:667,Y:667,Z:611,
+          "0":556,"1":556,"2":556,"3":556,"4":556,"5":556,"6":556,"7":556,"8":556,"9":556,
+          "-":333,".":278,",":278," ":278,":":278,"(":333,")":333,"/":278,"&":667},
+  bold:{  A:722,B:722,C:722,D:722,E:667,F:611,G:778,H:722,I:278,J:556,K:722,L:611,M:833,N:722,
+          O:778,P:667,Q:778,R:722,S:667,T:611,U:722,V:667,W:944,X:667,Y:667,Z:611,
+          "0":556,"1":556,"2":556,"3":556,"4":556,"5":556,"6":556,"7":556,"8":556,"9":556,
+          "-":333,".":278,",":278," ":278,":":278,"(":333,")":333,"/":278,"&":722}
+};
+function anchoTexto(fuente, size, t){
+  const tab=_ANCHOS[fuente==="F2"?"bold":"normal"];
+  let a=0;
+  for(const c of String(t)) a += (tab[c] !== undefined ? tab[c] : 556);
+  return a*size/1000;
+}
+
+function _pdfEscape(t){
+  return String(t).replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)")
+                  .replace(/[áàä]/g,"a").replace(/[éèë]/g,"e").replace(/[íìï]/g,"i")
+                  .replace(/[óòö]/g,"o").replace(/[úùü]/g,"u").replace(/ñ/g,"n")
+                  .replace(/[ÁÀÄ]/g,"A").replace(/[ÉÈË]/g,"E").replace(/[ÍÌÏ]/g,"I")
+                  .replace(/[ÓÒÖ]/g,"O").replace(/[ÚÙÜ]/g,"U").replace(/Ñ/g,"N")
+                  .replace(/[^\x20-\x7E]/g,"");
+}
+function generarPDF(s){
+  const W=595, H=842;
+  const nombre=(((s.nom||"")+" "+(s.ape||"")).trim()||"PARTICIPANTE").toUpperCase();
+  const cod=(s.codigo||"");
+  const L=[];
+  // fondo
+  L.push("0.02 0.03 0.04 rg 0 0 "+W+" "+H+" re f");
+  // marco
+  L.push("0.18 0.88 0.42 RG 4 w 26 26 "+ (W-52) +" "+ (H-52) +" re S");
+  function txt(fuente, size, r,g,b, x, y, t){
+    L.push("BT /"+fuente+" "+size+" Tf "+r+" "+g+" "+b+" rg 1 0 0 1 "+x+" "+y+" Tm ("+_pdfEscape(t)+") Tj ET");
+  }
+  function centrada(fuente,size,r,g,b,y,t){
+    const ancho = anchoTexto(fuente, size, t);
+    txt(fuente,size,r,g,b,(W-ancho)/2,y,t);
+  }
+  centrada("F2", 15, 0.18,0.88,0.42, 760, "EVOBIKE  ·  CUPCO FEST 2026");
+  centrada("F2", 21, 1,1,1,               690, "MI NUMERO PARA EL SORTEO");
+  centrada("F2", 58, 1,0.83,0,            580, cod);
+  centrada("F2", 24, 1,1,1,               510, nombre);
+  centrada("F1", 13, 0.62,0.69,0.78,      455, "Sorteo de una EVOBIKE SOL PRO");
+  centrada("F1", 13, 0.62,0.69,0.78,      432, "CupCo Fest · La Unidad · hoy 20:30");
+  centrada("F2", 15, 0.18,0.88,0.42,      360, "PRESENTA ESTE CODIGO EN LA CARPA");
+  centrada("F1", 11, 0.42,0.49,0.56,      335, "Personal e intransferible");
+  centrada("F1", 10, 0.42,0.49,0.56,      70,  "EVOBIKE ARGENTINA");
+  const stream=L.join("\n");
+  const objs=[
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+W+" "+H+"] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
+    "<< /Length "+stream.length+" >>\nstream\n"+stream+"\nendstream"
+  ];
+  let out="%PDF-1.4\n";
+  const offs=[];
+  objs.forEach((o,i)=>{ offs.push(out.length); out+=(i+1)+" 0 obj\n"+o+"\nendobj\n"; });
+  const xref=out.length;
+  out+="xref\n0 "+(objs.length+1)+"\n0000000000 65535 f \n";
+  offs.forEach(o=>{ out+=String(o).padStart(10,"0")+" 00000 n \n"; });
+  out+="trailer\n<< /Size "+(objs.length+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF";
+  return out;
+}
+function descargarPDF(){
+  try{
+    const s=S();
+    const pdf=generarPDF(s);
+    const blob=new Blob([pdf],{type:"application/pdf"});
+    const a=document.createElement("a");
+    a.download="EVOBIKE-"+(s.codigo||"codigo")+".pdf";
+    a.href=URL.createObjectURL(blob);
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    sonidoMoneda();
+    const b=document.getElementById("desc");
+    if(b){ const t=b.textContent; b.textContent="¡DESCARGADO!"; setTimeout(()=>b.textContent=t,1900); }
+  }catch(e){ alert("No se pudo generar el PDF. Sacale una captura a tu código."); }
 }
 
 function descargarCodigo(){
